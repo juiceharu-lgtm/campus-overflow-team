@@ -16,6 +16,7 @@ a:hover { text-decoration: underline; }
 .user { display: flex; align-items: center; gap: 8px; }
 .role { font-size: 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 10px; padding: 1px 6px; }
 .badge { background: var(--danger); color: #fff; border-radius: 9px; padding: 0 6px; font-size: 12px; margin-left: 4px; }
+.status-dot { color: var(--danger); font-weight: 700; margin-left: 4px; }
 
 .layout { display: grid; grid-template-columns: 1fr 260px; gap: 24px; }
 @media (max-width: 860px) { .layout { grid-template-columns: 1fr; } }
@@ -26,6 +27,11 @@ aside { background: #fff; border: 1px solid var(--line); border-radius: 8px; pad
 input, textarea, select { padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; font: inherit; background: #fff; }
 button { font: inherit; padding: 7px 12px; border: 1px solid var(--line); background: #fff; border-radius: 6px; cursor: pointer; }
 button:hover { border-color: var(--brand); }
+button:disabled { cursor: not-allowed; opacity: .6; }
+button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--brand) 35%, transparent);
+  outline-offset: 2px;
+}
 button.primary, a.primary { background: var(--brand); color: #fff; border-color: var(--brand); padding: 8px 14px; border-radius: 6px; }
 button.link { border: none; background: none; color: var(--brand); padding: 4px 0; }
 .check { display: flex; align-items: center; gap: 4px; color: var(--muted); }
@@ -57,6 +63,7 @@ article h1 { font-size: 24px; margin-bottom: 4px; }
 .comment-form input { flex: 1; }
 .answer-form { background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 16px; }
 .answer-form textarea { width: 100%; margin-bottom: 8px; }
+.answer-form .markdown-preview { margin-bottom: 12px; }
 
 .form-page { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
 .form-page.narrow { max-width: 420px; }
@@ -71,3 +78,39 @@ article h1 { font-size: 24px; margin-bottom: 4px; }
 .plain li { padding: 6px 0; border-bottom: 1px solid var(--line); }
 .muted { color: var(--muted); }
 .error { color: var(--danger); }
+.state-message { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px; margin: 8px 0; border: 1px solid currentColor; border-radius: 6px; }
+.notification-list li { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+
+.markdown-preview { border: 1px solid var(--line); border-radius: 8px; background: #fff; padding: 12px 16px; }
+.markdown-preview h3 { margin: 0 0 10px; font-size: 15px; color: var(--muted); }
+.markdown-body { overflow-wrap: anywhere; }
+.markdown-body > :first-child { margin-top: 0; }
+.markdown-body > :last-child { margin-bottom: 0; }
+.markdown-body pre { overflow-x: auto; background: #f6f8fa; padding: 12px; border-radius: 6px; }
+.markdown-body code { background: #f6f8fa; padding: 1px 4px; border-radius: 3px; }
+.markdown-body img { max-width: 100%; }
+
+.modal { width: min(440px, calc(100% - 32px)); border: 1px solid var(--line); border-radius: 10px; padding: 0; box-shadow: 0 18px 60px rgba(31, 35, 40, .24); }
+.modal::backdrop { background: rgba(31, 35, 40, .45); }
+.modal form { display: flex; flex-direction: column; gap: 12px; padding: 20px; }
+.modal h2, .modal p { margin: 0; }
+.modal label { display: flex; flex-direction: column; gap: 4px; }
+.dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+
+@media (max-width: 640px) {
+  main { padding: 16px 10px; }
+  .topbar { align-items: flex-start; flex-wrap: wrap; padding: 10px 12px; gap: 10px; }
+  .topbar nav { order: 3; width: 100%; overflow-x: auto; padding-top: 4px; }
+  .topbar .user { max-width: 50%; flex-wrap: wrap; justify-content: flex-end; }
+  .toolbar > input, .toolbar > select, .toolbar > .primary { width: 100%; }
+  .toolbar input[type=text], .toolbar input:not([type]) { min-width: 0; }
+  .qlist li { flex-direction: column; gap: 10px; padding: 12px; }
+  .stats { flex-direction: row; min-width: 0; text-align: left; gap: 12px; }
+  .post { padding: 12px; gap: 10px; }
+  .votebox { min-width: 34px; }
+  .comment-form { flex-wrap: wrap; }
+  .comment-form input { flex-basis: 100%; }
+  .notification-list li { align-items: flex-start; flex-direction: column; }
+  .board { font-size: 14px; }
+  .board th, .board td { padding: 8px 6px; }
+}
