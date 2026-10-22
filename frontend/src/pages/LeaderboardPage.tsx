@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { api } from '../api';
 import type { LeaderboardEntry } from '../types';
 
@@ -7,10 +7,29 @@ const PERIODS = [['week', '本周'], ['month', '本月'], ['term', '本学期'],
 export function LeaderboardPage() {
   const [period, setPeriod] = useState<string>('week');
   const [rows, setRows] = useState<LeaderboardEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [reloadKey, setReloadKey] = useState(0);
+  const requestId = useRef(0);
 
   useEffect(() => {
-    api.leaderboard(period).then(setRows).catch(() => setRows([]));
-  }, [period]);
+    const currentRequest = ++requestId.current;
+    setLoading(true);
+    setError('');
+    api.leaderboard(period)
+      .then((result) => {
+        if (currentRequest === requestId.current) setRows(result);
+      })
+      .catch((requestError: Error) => {
+        if (currentRequest === requestId.current) setError(requestError.message);
+      })
+      .finally(() => {
+        if (currentRequest === requestId.current) setLoading(false);
+      });
+    return () => {
+      if (currentRequest === requestId.current) requestId.current += 1;
+    };
+  }, [period, reloadKey]);
 
   return (
     <div className="form-page">
@@ -22,7 +41,14 @@ export function LeaderboardPage() {
           </button>
         ))}
       </div>
-      <table className="board">
+      {loading && <p className="muted" role="status">正在加载排行榜…</p>}
+      {error && (
+        <div className="state-message error" role="alert">
+          <span>{error}</span>
+          <button onClick={() => setReloadKey((value) => value + 1)}>重试</button>
+        </div>
+      )}
+      <table className="board" aria-busy={loading}>
         <thead><tr><th>名次</th><th>用户</th><th>声誉</th></tr></thead>
         <tbody>
           {rows.map((r) => (
@@ -34,7 +60,7 @@ export function LeaderboardPage() {
           ))}
         </tbody>
       </table>
-      {rows.length === 0 && <p className="muted">这个周期还没有数据。</p>}
+      {!loading && !error && rows.length === 0 && <p className="muted">这个周期还没有数据。</p>}
     </div>
   );
 }

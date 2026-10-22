@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../auth';
@@ -13,18 +13,36 @@ export function QuestionListPage() {
   const [sort, setSort] = useState('newest');
   const [unanswered, setUnanswered] = useState(false);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [reloadKey, setReloadKey] = useState(0);
+  const requestId = useRef(0);
 
   useEffect(() => {
     api.popularTags().then(setTags).catch(() => undefined);
   }, []);
 
   useEffect(() => {
+    const currentRequest = ++requestId.current;
+    setLoading(true);
+    setError('');
     const searching = keyword.trim() !== '' || activeTag || unanswered || sort !== 'newest';
     const promise = searching
       ? api.search(keyword.trim(), { tag: activeTag, sort, unanswered })
       : api.questions(1);
-    promise.then((r) => { setData(r); setError(''); }).catch((e) => setError(e.message));
-  }, [keyword, activeTag, sort, unanswered]);
+    promise
+      .then((result) => {
+        if (currentRequest === requestId.current) setData(result);
+      })
+      .catch((requestError: Error) => {
+        if (currentRequest === requestId.current) setError(requestError.message);
+      })
+      .finally(() => {
+        if (currentRequest === requestId.current) setLoading(false);
+      });
+    return () => {
+      if (currentRequest === requestId.current) requestId.current += 1;
+    };
+  }, [keyword, activeTag, sort, unanswered, reloadKey]);
 
   return (
     <div className="layout">
@@ -50,9 +68,15 @@ export function QuestionListPage() {
             标签筛选：<b>{activeTag}</b> <button onClick={() => setActiveTag(undefined)}>清除</button>
           </p>
         )}
-        {error && <p className="error">{error}</p>}
+        {loading && <p className="muted" role="status">正在加载问题…</p>}
+        {error && (
+          <div className="state-message error" role="alert">
+            <span>{error}</span>
+            <button onClick={() => setReloadKey((value) => value + 1)}>重试</button>
+          </div>
+        )}
 
-        <ul className="qlist">
+        <ul className="qlist" aria-busy={loading}>
           {data?.items.map((q) => (
             <li key={q.id}>
               <div className="stats">
@@ -73,7 +97,9 @@ export function QuestionListPage() {
             </li>
           ))}
         </ul>
-        {data && data.items.length === 0 && <p className="muted">没有匹配的问题，换个关键词试试。</p>}
+        {!loading && !error && data && data.items.length === 0 && (
+          <p className="muted">没有匹配的问题，换个关键词试试。</p>
+        )}
       </section>
 
       <aside>

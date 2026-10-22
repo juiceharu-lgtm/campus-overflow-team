@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../auth';
+import { MarkdownPreview } from '../components/MarkdownPreview';
 
 export function AskPage() {
   const { me } = useAuth();
@@ -11,8 +12,12 @@ export function AskPage() {
   const [tags, setTags] = useState('');
   const [courseId, setCourseId] = useState<string>('');
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   const submit = async () => {
+    if (submitting) return;
+    setSubmitting(true);
+    setError('');
     try {
       const { id } = await api.ask({
         courseId: courseId ? Number(courseId) : undefined,
@@ -23,11 +28,13 @@ export function AskPage() {
       navigate(`/questions/${id}`);
     } catch (e) {
       setError((e as Error).message);
+    } finally {
+      setSubmitting(false);
     }
   };
 
   return (
-    <div className="form-page">
+    <form className="form-page" onSubmit={(event) => { event.preventDefault(); void submit(); }}>
       <h1>提出一个问题</h1>
       <label>标题（10–150 字，尽量具体）
         <input value={title} onChange={(e) => setTitle(e.target.value)} />
@@ -35,6 +42,7 @@ export function AskPage() {
       <label>正文（Markdown，至少 20 字：说明你尝试过什么、卡在哪里）
         <textarea rows={12} value={body} onChange={(e) => setBody(e.target.value)} />
       </label>
+      <MarkdownPreview source={body} />
       <label>标签（1–5 个，用空格或逗号分隔）
         <input value={tags} onChange={(e) => setTags(e.target.value)} placeholder="数据结构 红黑树" />
       </label>
@@ -45,7 +53,9 @@ export function AskPage() {
         </select>
       </label>
       {error && <p className="error">{error}</p>}
-      <button className="primary" onClick={submit}>发布问题</button>
-    </div>
+      <button className="primary" type="submit" disabled={submitting}>
+        {submitting ? '发布中…' : '发布问题'}
+      </button>
+    </form>
   );
 }

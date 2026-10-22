@@ -13,13 +13,28 @@ function Header() {
   const { me, logout } = useAuth();
   const navigate = useNavigate();
   const [unread, setUnread] = useState(0);
+  const [unreadError, setUnreadError] = useState(false);
 
   useEffect(() => {
     if (!me) return;
-    const load = () => api.unreadCount().then((r) => setUnread(r.count)).catch(() => undefined);
+    let active = true;
+    const load = () => api.unreadCount()
+      .then((r) => {
+        if (!active) return;
+        setUnread(r.count);
+        setUnreadError(false);
+      })
+      .catch(() => {
+        if (active) setUnreadError(true);
+      });
     load();
     const timer = setInterval(load, 30_000);
-    return () => clearInterval(timer);
+    window.addEventListener('notifications:changed', load);
+    return () => {
+      active = false;
+      clearInterval(timer);
+      window.removeEventListener('notifications:changed', load);
+    };
   }, [me]);
 
   return (
@@ -28,7 +43,12 @@ function Header() {
       <nav>
         <Link to="/">问题</Link>
         <Link to="/leaderboard">排行榜</Link>
-        {me && <Link to="/notifications">通知{unread > 0 && <span className="badge">{unread}</span>}</Link>}
+        {me && (
+          <Link to="/notifications" title={unreadError ? '未读数量更新失败，稍后将自动重试' : undefined}>
+            通知{unread > 0 && <span className="badge">{unread}</span>}
+            {unreadError && <span className="status-dot" aria-label="未读数量更新失败">!</span>}
+          </Link>
+        )}
       </nav>
       <div className="spacer" />
       {me ? (

@@ -81,5 +81,6 @@ export const api = {
 
   notifications: () => get<Page<Notification>>('/v1/notifications'),
   unreadCount: () => get<{ count: number }>('/v1/notifications/unread-count'),
+  readNotification: (id: number) => request<void>('POST', `/v1/notifications/${id}/read`),
   readAll: () => request<{ updated: number }>('POST', '/v1/notifications/read-all', {}),
 };
