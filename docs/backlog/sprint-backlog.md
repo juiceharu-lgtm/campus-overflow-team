@@ -1,6 +1,6 @@
 # CampusOverflow Sprint Backlog
 
-更新基线：`origin/main` at `6697eed`。状态依据 2026-10-22 提交前读取的 main 与 PR #2～#5：#2、#3、#5 为开放正式 PR，#4 为开放 Draft，均未合并且均显示 2/3 checks passing。没有远端证据的成员工作标为“待负责人确认”。
+更新基线：2026-10-23 读取的 `origin/main` at `de75f0d`。PR #2、#3 已合并；PR #4 已转正式并更新至 `d600edf`，PR #5、#6 仍为开放正式 PR。#4～#6 的前端检查成功，后端检查失败日志均指向 main 原有 Q&A TODO；新提交后的 #4 仍需等待新一轮 Actions 和评审状态。没有远端证据的成员工作标为“待负责人确认”。
 
 故事 ID 原样引用 A 的 [PR #3](https://github.com/juiceharu-lgtm/campus-overflow-team/pull/3) Product Backlog（US‑001～US‑013），本文件不重新编号用户故事。Sprint 与课程原文的对应关系已按 `CampusOverflow实验部分 (1).pdf` 文件页序复核：Lab1/Sprint 0（PDF 第1～3页）、Lab2～3/Sprint 1（第3～6页）、Lab4～5/Sprint 2（第6～10页）、Lab6～7/Sprint 3（第10～13页）、Lab8/Sprint 4（第13～15页）。
 
@@ -16,7 +16,7 @@ PR #3 的 `team-work-allocation-v1.md` 同时将 Lab4～Lab6 的前端主体分�
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | S0-01 | — | 恢复完整初始框架和正确目录 | C | 老师原始 ZIP | main 中后端、前端、部署和 CI 结构齐全 | 已合并 | [PR #1](https://github.com/juiceharu-lgtm/campus-overflow-team/pull/1) |
 | S0-02 | — | 环境核验与架构阅读记录 | C | JDK 21、Node 20+ | 区分执行环境与个人电脑，记录真实命令和限制 | 已提交待评审 | [PR #4 阶段1文档](https://github.com/juiceharu-lgtm/campus-overflow-team/pull/4) |
-| S0-03 | — | A 个人介绍与角色承诺 | A | 无 | 文档内容经本人和队友评审 | 已提交待评审 | [PR #2](https://github.com/juiceharu-lgtm/campus-overflow-team/pull/2) |
+| S0-03 | — | A 个人介绍与角色承诺 | A | 无 | 文档内容经本人和队友评审 | 已合并 | [PR #2](https://github.com/juiceharu-lgtm/campus-overflow-team/pull/2)；main `de75f0d` |
 | S0-04 | — | C 个人介绍与角色承诺 | C | 本人确认 | 仅含已知信息；承诺文本由本人确认；课程要求的签字记录真实存在 | 进行中 | `docs/team/hello-C.md`、`docs/team/role-commit-C.md`（待本人确认，尚未签字） |
 | S0-05 | — | B 个人介绍与角色承诺 | B | B 提供内容 | 文档存在并经本人确认 | 待负责人确认 | 尚无可引用证据 |
 | S0-06 | — | 团队章程、分支和 DoD | 全员；C 整理 | 全员确认 | 价值观、沟通、开发规约、DoD 均明确；形成课程要求的正式 `charter-v1.0.md` 并保留确认记录 | 进行中 | `docs/team/team-charter-v1-draft.md`（待全员确认，不是正式版） |
@@ -46,8 +46,8 @@ PR #3 的 `team-work-allocation-v1.md` 同时将 Lab4～Lab6 的前端主体分�
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | S3-REP-01 | US‑010～US‑012 | Reputation 领域层 TODO 与单元测试 | B | Q&A 事件契约 | 账户、规则、徽章、悬赏、学期规则测试通过 | 待负责人确认 | [任务清单](../学生任务清单.md)；未看到 B 的远端成果，不能据此判断是否未开发 |
 | S3-REP-02 | US‑010～US‑012 | Reputation 应用层、事件处理和幂等 | B | S3-REP-01、Q&A 事件 | 应用测试通过，重复事件无重复积分或副作用 | 待负责人确认 | 尚无可引用证据 |
-| S3-DIS-01 | US‑013 | Discovery 领域层 7 个 TODO 与测试 | C | Q&A 数据语义 | 领域测试 13/13 通过 | 已提交待评审 | [Draft PR #4](https://github.com/juiceharu-lgtm/campus-overflow-team/pull/4) |
-| S3-DIS-02 | US‑013 | Discovery 应用层 25 个 TODO 与测试 | C | Identity API、Q&A API、事件契约 | 应用测试 17/17 通过，事件消费幂等 | 已提交待评审 | [Draft PR #4](https://github.com/juiceharu-lgtm/campus-overflow-team/pull/4) |
+| S3-DIS-01 | US‑013 | Discovery 领域层 7 个 TODO 与测试 | C | Q&A 数据语义 | 领域测试 13/13 通过 | 已提交待评审 | [正式 PR #4](https://github.com/juiceharu-lgtm/campus-overflow-team/pull/4)；本机 JDK 21 复跑 13/13 通过 |
+| S3-DIS-02 | US‑013 | Discovery 应用层 25 个 TODO 与测试 | C | Identity API、Q&A API、事件契约 | 应用测试 17/17 通过，事件消费幂等 | 已提交待评审 | [正式 PR #4](https://github.com/juiceharu-lgtm/campus-overflow-team/pull/4)；提交 `d600edf` 后 17/17 通过 |
 | S3-DIS-03 | US‑013 | Discovery MySQL ngram、通知与跨上下文联调 | C；A、B 配合 | S2、S3-REP、Docker/MySQL | 真实 MySQL 搜索、通知、编辑删除和重复事件链路通过 | 未开始 | PR #4 明确未完成 Docker/MySQL/E2E |
 | S3-INT-01 | US‑010～US‑013 | Q&A→Reputation/Discovery 事件链联调 | A、B、C | 三个模块合并或可组合环境 | outbox 投递、重试、幂等和最终一致性均有真实记录 | 未开始 | 当前无真实 E2E 证据 |
 
@@ -68,7 +68,9 @@ PR #3 的 `team-work-allocation-v1.md` 同时将 Lab4～Lab6 的前端主体分�
 
 ## 当前合并门槛
 
-- PR #4 在确认并登记 DIS-3001 / DIS-4001 前保持 Draft。
-- PR #5 可进行代码评审，但 mock 浏览器验证不能替代真实后端和移动端验收。
+- PR #4 已登记 `DIS-3001` / `DIS-4001` 并转为正式 PR；登记明确为 C 依据现有异常映射提出，仍需团队在评审中确认。新提交 `d600edf` 后需以最新 Actions 和有效批准为准。
+- PR #5 可进行代码评审，`npm ci`、类型检查和构建已复跑通过；隔离 mock 浏览器验证不能替代真实后端和移动端验收。npm 审计仍报告需跨主版本处理的 Vite/React Router 风险，不能盲目 `audit fix --force`。
+- PR #6 已安全同步 PR #2、#3 合并后的 main，并更新状态证据；新提交后需重新核对批准和 Actions。
 - 全量 CI 仍被 main 中 Q&A 原始 TODO 阻塞；不得为变绿而删除测试或降低门槛。
+- GitHub API 当前未返回 main 分支保护或仓库 ruleset；这与课程要求不一致，需仓库管理员配置并保存真实证据。
 - B 的实际进展需要 B 本人或可引用的分支/PR/报告确认。
