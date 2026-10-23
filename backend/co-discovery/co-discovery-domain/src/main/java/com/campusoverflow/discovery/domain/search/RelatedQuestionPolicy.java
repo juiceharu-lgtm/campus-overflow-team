@@ -13,13 +13,28 @@ public final class RelatedQuestionPolicy {
     }
 
     public static double jaccard(int shared, int sizeA, int sizeB) {
-        // TODO(S3)：实现 RelatedQuestionPolicy.jaccard——参考领域单元测试与 arc42 文档中的业务规则
-        throw new UnsupportedOperationException("TODO(S3)：RelatedQuestionPolicy.jaccard 尚未实现");
+        int union = sizeA + sizeB - shared;
+        return union <= 0 ? 0.0 : (double) shared / union;
     }
 
     public static List<SearchIndex.RelatedCandidate> rank(List<SearchIndex.RelatedCandidate> candidates, int ownTagCount,
                                                           int limit) {
-        // TODO(S3)：实现 RelatedQuestionPolicy.rank——参考领域单元测试与 arc42 文档中的业务规则
-        throw new UnsupportedOperationException("TODO(S3)：RelatedQuestionPolicy.rank 尚未实现");
+        if (candidates == null || candidates.isEmpty() || ownTagCount <= 0 || limit <= 0) {
+            return List.of();
+        }
+
+        Comparator<SearchIndex.RelatedCandidate> ranking = Comparator
+                .comparingDouble((SearchIndex.RelatedCandidate c) ->
+                        jaccard(c.sharedTags(), ownTagCount, c.tagCount()))
+                .reversed()
+                .thenComparing(Comparator.comparingInt(SearchIndex.RelatedCandidate::score).reversed())
+                .thenComparing(Comparator.comparing(SearchIndex.RelatedCandidate::accepted).reversed())
+                .thenComparingLong(SearchIndex.RelatedCandidate::questionId);
+
+        return candidates.stream()
+                .filter(c -> jaccard(c.sharedTags(), ownTagCount, c.tagCount()) > 0.0)
+                .sorted(ranking)
+                .limit(limit)
+                .toList();
     }
 }
