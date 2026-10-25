@@ -16,6 +16,8 @@
             <groupId>com.campusoverflow</groupId>
             <artifactId>co-shared-kernel</artifactId>
         </dependency>
+
+        <!-- 测试依赖 -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
@@ -26,16 +28,31 @@
             <artifactId>assertj-core</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- Mockito，仅test作用域，domain主代码不引入，符合FF‑1架构约束 -->
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
+
     <build>
         <plugins>
+            <!-- jacoco 领域代码覆盖率校验，继承父变量 domain.coverage.minimum -->
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <executions>
                     <execution>
                         <id>check-domain-coverage</id>
-                        <goals><goal>check</goal></goals>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
                         <configuration>
                             <rules>
                                 <rule>
@@ -52,6 +69,16 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+
+            <!-- surefire 单元测试插件；forkCount=0：不在子JVM运行，规避Windows VM crash问题 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+                <configuration>
+                    <forkCount>0</forkCount>
+                </configuration>
             </plugin>
         </plugins>
     </build>
