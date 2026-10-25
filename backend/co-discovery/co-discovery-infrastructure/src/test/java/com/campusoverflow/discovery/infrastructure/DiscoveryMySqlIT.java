@@ -27,6 +27,7 @@ import com.campusoverflow.shared.security.Role;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,9 +61,9 @@ import org.springframework.transaction.support.TransactionTemplate;
 @EnabledIfEnvironmentVariable(named = "DISCOVERY_IT_DB_URL", matches = ".+")
 class DiscoveryMySqlIT {
 
-    private static final long QUESTION_ID = 9_100_001L;
-    private static final long RECIPIENT_ID = 9_200_001L;
-    private static final String ANSWER_EVENT_ID = "dis-it-answer-9100001";
+    private static final long QUESTION_ID = uniquePositiveId();
+    private static final long RECIPIENT_ID = uniquePositiveId();
+    private static final String ANSWER_EVENT_ID = "dis-it-answer-" + UUID.randomUUID();
 
     @SpringBootConfiguration
     @EnableAutoConfiguration
@@ -96,7 +97,7 @@ class DiscoveryMySqlIT {
     @Test
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     void repeatedAnswerEventCreatesOnePersistentNotificationAndOnlyOwnerCanReadIt() {
-        cleanupNotificationFixture();
+        boolean created = false;
         try {
             IdentityApi identity = mock(IdentityApi.class);
             when(identity.findUser(88L)).thenReturn(Optional.of(
@@ -108,6 +109,7 @@ class DiscoveryMySqlIT {
                     9_300_001L, QUESTION_ID, 88L, RECIPIENT_ID, "并发结构如何选择");
 
             projector.on(event);
+            created = true;
             projector.on(event);
 
             NotificationService service = new NotificationService(notifications);
@@ -126,7 +128,9 @@ class DiscoveryMySqlIT {
             service.markRead(owner, notificationId);
             assertThat(service.unreadCount(owner)).isZero();
         } finally {
-            cleanupNotificationFixture();
+            if (created) {
+                cleanupNotificationFixture();
+            }
         }
     }
 
@@ -135,11 +139,13 @@ class DiscoveryMySqlIT {
     void writesSearchProjectionFindsChineseKeywordAndHidesSoftDeletedQuestion() {
         Instant createdAt = Instant.parse("2026-10-25T06:10:00Z");
         TransactionTemplate transaction = new TransactionTemplate(transactionManager);
+        boolean inserted = false;
         try {
             transaction.executeWithoutResult(status -> searchIndex.insert(new SearchDocument(
                     QUESTION_ID, 77L, 88L, "并发编程中的跳表选择",
                     "跳表适合并发写入，红黑树适合单线程有序查询。",
                     List.of("数据结构", "并发编程"), createdAt)));
+            inserted = true;
 
             SearchQuery query = new SearchQuery("跳表", null, null, SearchSort.RELEVANCE,
                     false, false, new PageRequest(1, 20));
@@ -156,10 +162,12 @@ class DiscoveryMySqlIT {
             assertThat(afterDelete).isNotNull();
             assertThat(afterDelete.items()).isEmpty();
         } finally {
-            transaction.executeWithoutResult(status -> {
-                jdbc.update("DELETE FROM dis_question_tag WHERE question_id = ?", QUESTION_ID);
-                jdbc.update("DELETE FROM dis_search_doc WHERE question_id = ?", QUESTION_ID);
-            });
+            if (inserted) {
+                transaction.executeWithoutResult(status -> {
+                    jdbc.update("DELETE FROM dis_question_tag WHERE question_id = ?", QUESTION_ID);
+                    jdbc.update("DELETE FROM dis_search_doc WHERE question_id = ?", QUESTION_ID);
+                });
+            }
         }
     }
 
@@ -175,5 +183,10 @@ class DiscoveryMySqlIT {
         new TransactionTemplate(transactionManager).executeWithoutResult(status -> jdbc.update(
                 "DELETE FROM dis_notification WHERE source_event_id = ? AND recipient_id = ?",
                 ANSWER_EVENT_ID, RECIPIENT_ID));
+    }
+
+    private static long uniquePositiveId() {
+        long value = UUID.randomUUID().getMostSignificantBits() & Long.MAX_VALUE;
+        return value == 0 ? 1 : value;
     }
 }
