@@ -1,77 +1,118 @@
 package com.campusoverflow.identity.domain;
 
 import com.campusoverflow.shared.domain.BusinessRuleException;
-import com.campusoverflow.shared.security.Actor;
 import java.time.Instant;
-import java.util.Objects;
 
 public class CourseApplication {
-    private Long id;
+    private final Long id;
     private final Long applicantUserId;
+    private final Long courseId;
     private CourseApplicationStatus status;
-    private Actor reviewer;
-    private String reviewComment;
-    private final Instant applyAt;
-    private final long version;
+    private String rejectReason;
+    private final Instant applyTime;
+    private Instant operateTime;
 
-    private CourseApplication(Long id, Long applicantUserId, long version) {
+    private CourseApplication(Long id,
+                              Long applicantUserId,
+                              Long courseId,
+                              CourseApplicationStatus status,
+                              String rejectReason,
+                              Instant applyTime,
+                              Instant operateTime) {
         this.id = id;
-        this.applicantUserId = Objects.requireNonNull(applicantUserId);
-        this.status = CourseApplicationStatus.PENDING;
-        this.applyAt = Instant.now();
-        this.version = version;
+        this.applicantUserId = applicantUserId;
+        this.courseId = courseId;
+        this.status = status;
+        this.rejectReason = rejectReason;
+        this.applyTime = applyTime;
+        this.operateTime = operateTime;
     }
 
     /**
-     * 创建选课申请，新建默认状态：PENDING
+     * 工厂方法：发起选课申请
+     * @param applicantUserId 申请人id
+     * @param courseId 课程id
+     * @param now 当前时间，由应用层传入，领域禁止直接Instant.now()
      */
-    public static CourseApplication create(Long applicantUserId) {
-        return new CourseApplication(null, applicantUserId, 0);
+    public static CourseApplication create(Long applicantUserId, Long courseId, Instant now) {
+        if (applicantUserId == null) {
+            throw new BusinessRuleException("ID‑1021", "申请人ID不能为空");
+        }
+        if (courseId == null) {
+            throw new BusinessRuleException("ID‑1022", "课程ID不能为空");
+        }
+        return new CourseApplication(
+                null,
+                applicantUserId,
+                courseId,
+                CourseApplicationStatus.PENDING,
+                null,
+                now,
+                now
+        );
     }
 
     /**
-     * 仓储重建聚合（reconstitute 写法和 User 保持一致，持久化专用）
+     * 领域方法：审批通过
+     * @param now 时间，应用层传入
      */
-    public static CourseApplication reconstitute(Long id, Long applicantUserId, CourseApplicationStatus status,
-                                                 Actor reviewer, String reviewComment, Instant applyAt, long version) {
-        CourseApplication app = new CourseApplication(id, applicantUserId, version);
-        app.status = status;
-        app.reviewer = reviewer;
-        app.reviewComment = reviewComment;
-        return app;
+    public void approve(Instant now) {
+        guardCanOperate();
+        this.status = CourseApplicationStatus.APPROVED;
+        this.rejectReason = null;
+        this.operateTime = now;
     }
 
     /**
-     * 审批业务方法
-     * 不变式：只有 PENDING 才允许审批，不能重复审批
+     * 领域方法：驳回申请
+     * @param reason 驳回理由
+     * @param now 时间，应用层传入
      */
-    public void approve(Actor reviewer, CourseApplicationStatus newStatus, String comment) {
+    public void reject(String reason, Instant now) {
+        guardCanOperate();
+        if (reason == null || reason.isBlank()) {
+            throw new BusinessRuleException("ID‑1023", "驳回理由不能为空");
+        }
+        this.status = CourseApplicationStatus.REJECTED;
+        this.rejectReason = reason;
+        this.operateTime = now;
+    }
+
+    /**
+     * 领域不变量守卫：只有PENDING待审批状态才允许审批操作
+     */
+    private void guardCanOperate() {
         if (!CourseApplicationStatus.PENDING.equals(this.status)) {
-            throw new BusinessRuleException("ID-4001", "仅待审批状态的选课申请允许审批，禁止重复审批");
+            throw new BusinessRuleException("ID‑1020", "仅待审批状态的申请可以执行审批操作");
         }
-        if (!CourseApplicationStatus.APPROVED.equals(newStatus)
-                && !CourseApplicationStatus.REJECTED.equals(newStatus)) {
-            throw new BusinessRuleException("ID-4002", "审批结果只能选择 APPROVED 或者 REJECTED");
-        }
-        this.status = newStatus;
-        this.reviewer = Objects.requireNonNull(reviewer);
-        this.reviewComment = comment;
     }
 
-    /** 分配主键，和User.assignId 风格对齐 */
-    public void assignId(long id) {
-        if (this.id != null) {
-            throw new IllegalStateException("ID 已分配");
-        }
-        this.id = id;
+    // ============ getter ============
+    public Long getId() {
+        return id;
     }
 
-    // 访问器：和项目统一风格，不带get前缀
-    public Long id() { return id; }
-    public Long applicantUserId() { return applicantUserId; }
-    public CourseApplicationStatus status() { return status; }
-    public Actor reviewer() { return reviewer; }
-    public String reviewComment() { return reviewComment; }
-    public Instant applyAt() { return applyAt; }
-    public long version() { return version; }
+    public Long getApplicantUserId() {
+        return applicantUserId;
+    }
+
+    public Long getCourseId() {
+        return courseId;
+    }
+
+    public CourseApplicationStatus getStatus() {
+        return status;
+    }
+
+    public String getRejectReason() {
+        return rejectReason;
+    }
+
+    public Instant getApplyTime() {
+        return applyTime;
+    }
+
+    public Instant getOperateTime() {
+        return operateTime;
+    }
 }

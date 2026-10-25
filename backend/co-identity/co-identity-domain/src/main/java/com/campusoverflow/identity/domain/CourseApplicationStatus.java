@@ -10,7 +10,7 @@ public enum CourseApplicationStatus {
      */
     APPROVED,
     /**
-     * 驳回
+     * 审批驳回
      */
     REJECTED
 }
