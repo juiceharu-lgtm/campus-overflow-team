@@ -1,12 +1,9 @@
 package com.campusoverflow.qa.domain;
-
 import com.campusoverflow.shared.domain.BusinessRuleException;
 import com.campusoverflow.shared.domain.Guard;
 import java.time.Instant;
-
 /** 评论：挂在问题或回答下，支持一层“二级回复”。 */
 public class Comment {
-
     private Long id;
     private final TargetType targetType;
     private final long targetId;
@@ -15,7 +12,6 @@ public class Comment {
     private final Long parentId;
     private final String body;
     private final Instant createdAt;
-
     private Comment(Long id, TargetType targetType, long targetId, long questionId, long authorId, Long parentId,
                     String body, Instant createdAt) {
         this.id = id;
@@ -27,25 +23,48 @@ public class Comment {
         this.body = body;
         this.createdAt = createdAt;
     }
-
     public static Comment post(TargetType targetType, long targetId, long questionId, long authorId, Comment parent,
-                               String body, Instant now) {
-        // TODO(S2)：实现 Comment.post——参考领域单元测试与 arc42 文档中的业务规则
-        throw new UnsupportedOperationException("TODO(S2)：Comment.post 尚未实现");
-    }
+                              String body, Instant now) {
+        Guard.notNull(body, "评论内容不能为空");
+        // 评论正文 2‑600字符
+        if(body.length() < 2 || body.length() > 600){
+            throw new BusinessRuleException("QA‑1003", "评论内容长度必须在2‑600字符之间");
+        }
 
+        Long realParentId = null;
+        if(parent != null){
+            // QA‑1016：只允许一层回复，父评论不能再有parent（parent.parentId != null）
+            if(parent.parentId() != null){
+                throw new BusinessRuleException("QA‑1016","不允许对回复再做回复，只支持一层评论回复");
+            }
+            // QA‑1017：回复必须和父评论的targetType、targetId完全一致
+            if(!parent.targetType().equals(targetType) || parent.targetId() != targetId){
+                throw new BusinessRuleException("QA‑1017","回复的目标必须与父评论目标保持一致");
+            }
+            realParentId = parent.id();
+        }
+
+        return new Comment(
+                null,
+                targetType,
+                targetId,
+                questionId,
+                authorId,
+                realParentId,
+                body,
+                now
+        );
+    }
     public static Comment reconstitute(Long id, TargetType targetType, long targetId, long questionId, long authorId,
-                                       Long parentId, String body, Instant createdAt) {
+                                      Long parentId, String body, Instant createdAt) {
         return new Comment(id, targetType, targetId, questionId, authorId, parentId, body, createdAt);
     }
-
     public void assignId(long id) {
         if (this.id != null) {
             throw new IllegalStateException("ID 已分配");
         }
         this.id = id;
     }
-
     public Long id() { return id; }
     public TargetType targetType() { return targetType; }
     public long targetId() { return targetId; }
