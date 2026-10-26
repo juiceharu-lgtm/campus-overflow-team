@@ -1,6 +1,6 @@
 # CampusOverflow Sprint Backlog
 
-更新基线：2026-10-23 读取的 `origin/main` at `de75f0d`。PR #2、#3 已合并；PR #4 已转正式并更新至 `d600edf`，PR #5、#6 仍为开放正式 PR。#4～#6 的前端检查成功，后端检查失败日志均指向 main 原有 Q&A TODO；新提交后的 #4 仍需等待新一轮 Actions 和评审状态。没有远端证据的成员工作标为“待负责人确认”。
+更新基线：2026-10-26。PR #10、#4、#5 已依次正常进入 main；PR #9 已先合入 Discovery 分支。Q&A 已有 PR #15，但最新 `dd761dc` 仍有 4 个查询 TODO，application 测试因 Answer 服务构造器契约不一致而无法编译。原 `co-reputation` 仍未完成。没有远端证据的成员工作继续标为“待负责人确认”。
 
 故事 ID 原样引用 A 的 [PR #3](https://github.com/juiceharu-lgtm/campus-overflow-team/pull/3) Product Backlog（US‑001～US‑013），本文件不重新编号用户故事。Sprint 与课程原文的对应关系已按 `CampusOverflow实验部分 (1).pdf` 文件页序复核：Lab1/Sprint 0（PDF 第1～3页）、Lab2～3/Sprint 1（第3～6页）、Lab4～5/Sprint 2（第6～10页）、Lab6～7/Sprint 3（第10～13页）、Lab8/Sprint 4（第13～15页）。
 
@@ -35,9 +35,9 @@ PR #3 的 `team-work-allocation-v1.md` 同时将 Lab4～Lab6 的前端主体分�
 
 | 任务 ID | 关联故事 | 任务内容 | 负责人 | 依赖 | 验收条件 | 当前状态 | 证据链接 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| S2-QA-01 | US‑004～US‑011 | Q&A 领域层 36 个 S2 TODO 中的领域规则 | A | Identity API、既有测试 | Question、Answer、Comment、Vote、Tags、MarkdownBody 测试通过 | 待负责人确认 | [任务清单](../学生任务清单.md)；PR #5 Actions 仍显示 main 的 Q&A TODO 失败 |
-| S2-QA-02 | US‑004～US‑011 | Q&A 应用层命令与查询用例 | A | S2-QA-01、仓储/API | 应用测试通过，跨上下文仅经 API/事件 | 待负责人确认 | [任务清单](../学生任务清单.md) |
-| S2-QA-03 | US‑004～US‑011 | Q&A 补充单元测试与接口自测 | A；B 统筹质量 | S2-QA-01、S2-QA-02 | 既有断言保留，新增边界测试，结果可追溯 | 待负责人确认 | 当前未见 Q&A 功能 PR 或测试报告 |
+| S2-QA-01 | US‑004～US‑011 | Q&A 领域层 36 个 S2 TODO 中的领域规则 | A | Identity API、既有测试 | Question、Answer、Comment、Vote、Tags、MarkdownBody 测试通过 | 进行中 | [PR #15](https://github.com/juiceharu-lgtm/campus-overflow-team/pull/15)：domain 18/18；36 个可执行 TODO 已完成 32 个 |
+| S2-QA-02 | US‑004～US‑011 | Q&A 应用层命令与查询用例 | A | S2-QA-01、仓储/API | 应用测试通过，跨上下文仅经 API/事件 | 进行中 | PR #15 仍缺 4 个查询 TODO，Answer 服务入口、事件、缓存和审计契约未对齐 |
+| S2-QA-03 | US‑004～US‑011 | Q&A 补充单元测试与接口自测 | A；B 统筹质量 | S2-QA-01、S2-QA-02 | 既有断言保留，新增边界测试，结果可追溯 | 进行中 | application 在 `AnswerAndVoteServiceTest` 测试编译阶段失败；PR 正文“全部通过”需更正 |
 | S2-QA-04 | US‑004～US‑011 | Q&A 事件发布与 Discovery/Reputation 契约联调 | A；B、C 配合 | Q&A、Reputation、Discovery 实现 | 问题、回答、投票、采纳、删除等事件真实投递且幂等 | 未开始 | 三个业务分支尚未共同进入 main |
 
 ## S3 Reputation 与 Discovery
@@ -46,7 +46,7 @@ PR #3 的 `team-work-allocation-v1.md` 同时将 Lab4～Lab6 的前端主体分�
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | S3-REP-01 | US‑010～US‑012 | Reputation 领域层 TODO 与单元测试 | B | Q&A 事件契约 | 账户、规则、徽章、悬赏、学期规则测试通过 | 待负责人确认 | [任务清单](../学生任务清单.md)；未看到 B 的远端成果，不能据此判断是否未开发 |
 | S3-REP-02 | US‑010～US‑012 | Reputation 应用层、事件处理和幂等 | B | S3-REP-01、Q&A 事件 | 应用测试通过，重复事件无重复积分或副作用 | 待负责人确认 | 尚无可引用证据 |
-| S3-DIS-01 | US‑013 | Discovery 领域层 7 个 TODO 与测试 | C | Q&A 数据语义 | 领域测试 13/13 通过 | 已提交待评审 | [正式 PR #4](https://github.com/juiceharu-lgtm/campus-overflow-team/pull/4)；本机 JDK 21 复跑 13/13 通过 |
+| S3-DIS-01 | US‑013 | Discovery 领域层 7 个 TODO 与测试 | C | Q&A 数据语义 | 领域测试 13/13 通过 | 已合并 | [PR #4](https://github.com/juiceharu-lgtm/campus-overflow-team/pull/4)；main 合并提交 `b4a136d` |
 | S3-DIS-02 | US‑013 | Discovery 应用层 25 个 TODO 与测试 | C | Identity API、Q&A API、事件契约 | 应用测试 17/17 通过，事件消费幂等 | 已提交待评审 | [正式 PR #4](https://github.com/juiceharu-lgtm/campus-overflow-team/pull/4)；提交 `d600edf` 后 17/17 通过 |
 | S3-DIS-03 | US‑013 | Discovery MySQL ngram、通知与跨上下文联调 | C；A、B 配合 | S2、S3-REP、Docker/MySQL | 真实 MySQL 搜索、通知、编辑删除和重复事件链路通过 | 未开始 | PR #4 明确未完成 Docker/MySQL/E2E |
 | S3-INT-01 | US‑010～US‑013 | Q&A→Reputation/Discovery 事件链联调 | A、B、C | 三个模块合并或可组合环境 | outbox 投递、重试、幂等和最终一致性均有真实记录 | 未开始 | 当前无真实 E2E 证据 |
@@ -55,7 +55,7 @@ PR #3 的 `team-work-allocation-v1.md` 同时将 Lab4～Lab6 的前端主体分�
 
 | 任务 ID | 关联故事 | 任务内容 | 负责人 | 依赖 | 验收条件 | 当前状态 | 证据链接 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| S4-FE-01 | US‑004～US‑013 | 页面状态、Markdown 预览、悬赏对话框、通知和移动端样式 | C | 现有前端骨架 | npm ci、typecheck、build 通过；安全与键盘交互可评审 | 已提交待评审 | [PR #5](https://github.com/juiceharu-lgtm/campus-overflow-team/pull/5)；前端 Actions 成功 |
+| S4-FE-01 | US‑004～US‑013 | 页面状态、Markdown 预览、悬赏对话框、通知和移动端样式 | C | 现有前端骨架 | npm ci、typecheck、build 通过；安全与键盘交互可评审 | 已合并 | [PR #5](https://github.com/juiceharu-lgtm/campus-overflow-team/pull/5)；main 合并提交 `9e4b4ce`；组合分支构建通过 |
 | S4-FE-02 | US‑004～US‑013 | 三个业务上下文真实前端联调 | C；A、B 配合 | Q&A、Reputation、Discovery、Identity 可运行 | 不使用生产伪数据；关键成功、错误和权限场景通过 | 未开始 | PR #5 仅完成隔离 mock 浏览器验证 |
 | S4-FE-03 | US‑004～US‑013 | 移动端与可访问性验收 | C | 可调视口浏览器或实体设备 | 指定窄视口、键盘和焦点场景有真实截图/记录 | 进行中 | PR #5 已实现样式和键盘逻辑；窄视口实测待补 |
 | S4-QA-01 | — | 全量单元测试与覆盖率统筹 | B；全员修复各自模块 | S1～S3 业务完成 | 全量测试通过；Lab7 团队单测覆盖率 >70%、核心聚合 90%+；README 领域层门槛 ≥70%；形成 JaCoCo HTML | 进行中 | CI 已运行但被 Q&A 原始 TODO 阻塞；覆盖率步骤尚未执行 |
