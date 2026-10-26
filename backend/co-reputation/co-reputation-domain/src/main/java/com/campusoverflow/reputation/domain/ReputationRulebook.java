@@ -21,13 +21,16 @@ public final class ReputationRulebook {
     }
 
     public static int voteEffect(int value) {
-        // TODO(S3)：实现 ReputationRulebook.voteEffect——参考领域单元测试与 arc42 文档中的业务规则
-        throw new UnsupportedOperationException("TODO(S3)：ReputationRulebook.voteEffect 尚未实现");
+        return switch (value) {
+            case 1 -> UPVOTE;
+            case -1 -> DOWNVOTE;
+            case 0 -> 0; // 撤销投票
+            default -> 0;
+        };
     }
 
     public static int voteDelta(int oldValue, int newValue) {
-        // TODO(S3)：实现 ReputationRulebook.voteDelta——参考领域单元测试与 arc42 文档中的业务规则
-        throw new UnsupportedOperationException("TODO(S3)：ReputationRulebook.voteDelta 尚未实现");
+        return voteEffect(newValue) - voteEffect(oldValue);
     }
 
     public static int acceptedDelta(long answerAuthorId, long questionAuthorId) {
@@ -36,13 +39,20 @@ public final class ReputationRulebook {
 
     /** 对正向投票增量应用每日上限；负向增量不受限。 */
     public static int applyDailyCap(int delta, int positiveVoteGainToday) {
-        // TODO(S3)：实现 ReputationRulebook.applyDailyCap——参考领域单元测试与 arc42 文档中的业务规则
-        throw new UnsupportedOperationException("TODO(S3)：ReputationRulebook.applyDailyCap 尚未实现");
+        // 负向分值，直接返回，不做上限拦截
+        if (delta <= 0) {
+            return delta;
+        }
+        int remaining = DAILY_VOTE_CAP - positiveVoteGainToday;
+        return Math.min(delta, Math.max(remaining, 0));
     }
 
     /** 开户时发放的悬赏积分（与声誉是两种不同的“货币”）。 */
     public static int initialPoints(Role role) {
-        // TODO(S3)：实现 ReputationRulebook.initialPoints——参考领域单元测试与 arc42 文档中的业务规则
-        throw new UnsupportedOperationException("TODO(S3)：ReputationRulebook.initialPoints 尚未实现");
+        if (role == Role.TEACHER) {
+            return 1000;
+        }
+        // 学生、其他角色默认0悬赏积分
+        return 0;
     }
 }
