@@ -144,3 +144,12 @@ mvn -pl co-bootstrap -am '-Dtest=ArchitectureTest' '-Dsurefire.failIfNoSpecified
 - `git diff --check`：通过，退出码 0。
 - Discovery 主代码 TODO 扫描：应用层、领域层均无业务 TODO 残留。
 - 当前仍有未提交修改和未跟踪文档/测试，符合本阶段“不提交、不推送、不创建 PR”的要求。
+
+## 8. PR #9 合并后复核（2026-10-26）
+
+- PR #9 在 head `0beaa78`、base `feature/c-discovery`、`reviewDecision=APPROVED`、无未解决线程、`mergeStateStatus=CLEAN` 的条件下正常合并，合并提交为 `ff90278`；没有绕过检查或保护规则。
+- 本地 `feature/c-discovery` 通过 fast-forward 同步到 `ff90278`。相对最新 main 的 PR #4 差异只包含 Discovery 领域/应用实现、对应测试、基础设施测试依赖、阶段 1～3 记录和错误码登记，没有前端或 A/B 业务代码。
+- JDK 21.0.11 下执行 `mvn -pl co-discovery/co-discovery-infrastructure -am test` 成功：Discovery domain 13/13、application 17/17，合计 30/30；另有 shared-kernel 2/2，均无失败、错误或跳过。
+- 显式设置 `DISCOVERY_IT_DB_URL`、`DISCOVERY_IT_DB_USER`、`DISCOVERY_IT_DB_PASSWORD`，连接本机 `127.0.0.1:3307` 的 MySQL 8.0.39，执行 `mvn -pl co-discovery/co-discovery-infrastructure -am '-Dtest=DiscoveryMySqlIT' '-Dsurefire.failIfNoSpecifiedTests=false' test`。两项 IT 最终 2/2 通过、0 跳过：覆盖通知持久化/重复事件幂等/归属校验/已读计数，以及中文搜索投影/标签读取/软删除排除。
+- 首次数据库命令因 PowerShell URL 变量边界写法错误而未进入断言；修正会话参数后连接成功。随后发现 infrastructure 测试模块缺少 application 测试已有的 Mockito subclass 配置，在 Oracle JDK 21 下初始化失败；补充同一测试资源后通过，未修改业务逻辑、断言、CI或覆盖率门槛。
+- 测试使用随机正数问题/收件人 ID 和随机事件 ID，并在 `finally` 中按本次 ID 清理。复核 `dis_notification` 的 `dis-it-answer-%` 夹具及测试标题对应的 `dis_search_doc` 行数均为 0，没有残留本次测试数据。
