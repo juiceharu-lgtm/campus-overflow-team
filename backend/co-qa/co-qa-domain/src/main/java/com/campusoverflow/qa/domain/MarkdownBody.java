@@ -1,29 +1,20 @@
 package com.campusoverflow.qa.domain;
-import com.campusoverflow.shared.domain.Guard;
 import com.campusoverflow.shared.domain.BusinessRuleException;
-
-/** Markdown 正文。只保存原文；渲染与 XSS 净化在基础设施层完成。 */
+import com.campusoverflow.shared.domain.Guard;
 public record MarkdownBody(String value) {
-
-    private static final int QUESTION_MIN_LEN = 20;
-    private static final int ANSWER_MIN_LEN = 10;
-    private static final int MAX_LEN = 30000;
-
-    public static MarkdownBody ofQuestion(String raw) {
-        Guard.notNull(raw, "正文不能为空");
-        if(raw.length() < QUESTION_MIN_LEN || raw.length() > MAX_LEN){
-            throw new BusinessRuleException("QA‑1002",
-                    String.format("问题正文长度必须在 %d‑%d 字符之间", QUESTION_MIN_LEN, MAX_LEN));
-        }
-        return new MarkdownBody(raw);
+    public MarkdownBody {
+        // 非空校验
+        value = Guard.requireNonNull(value, "QA-MARKDOWN-001", "markdown内容");
+        // 长度校验，按需调整范围，这里设置0~2000
+        value = Guard.requireText(value, 0, 2000, "QA-MARKDOWN-LEN", "markdown内容");
     }
 
+    // TODO 补齐：问题正文工厂
+    public static MarkdownBody ofQuestion(String raw) {
+        return new MarkdownBody(raw);
+    }
+    // TODO 补齐：回答正文工厂（可以单独控制回答最大长度）
     public static MarkdownBody ofAnswer(String raw) {
-        Guard.notNull(raw, "正文不能为空");
-        if(raw.length() < ANSWER_MIN_LEN || raw.length() > MAX_LEN){
-            throw new BusinessRuleException("QA‑1002",
-                    String.format("回答正文长度必须在 %d‑%d 字符之间", ANSWER_MIN_LEN, MAX_LEN));
-        }
         return new MarkdownBody(raw);
     }
 }
