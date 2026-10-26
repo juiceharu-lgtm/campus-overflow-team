@@ -12,6 +12,7 @@ public class Comment {
     private final Long parentId;
     private final String body;
     private final Instant createdAt;
+
     private Comment(Long id, TargetType targetType, long targetId, long questionId, long authorId, Long parentId,
                     String body, Instant createdAt) {
         this.id = id;
@@ -23,13 +24,13 @@ public class Comment {
         this.body = body;
         this.createdAt = createdAt;
     }
+
     public static Comment post(TargetType targetType, long targetId, long questionId, long authorId, Comment parent,
-                              String body, Instant now) {
-        Guard.notNull(body, "评论内容不能为空");
-        // 评论正文 2‑600字符
-        if(body.length() < 2 || body.length() > 600){
-            throw new BusinessRuleException("QA‑1003", "评论内容长度必须在2‑600字符之间");
-        }
+                               String body, Instant now) {
+        // 替换原来 Guard.notNull，使用项目提供的三参数 requireNonNull
+        Guard.requireNonNull(body, "QA-1002", "评论内容");
+        // 评论正文 2‑600字符，改用 Guard.requireText 统一校验（和项目规范对齐）
+        body = Guard.requireText(body, 2, 600, "QA-1003", "评论内容");
 
         Long realParentId = null;
         if(parent != null){
@@ -43,7 +44,6 @@ public class Comment {
             }
             realParentId = parent.id();
         }
-
         return new Comment(
                 null,
                 targetType,
@@ -55,16 +55,19 @@ public class Comment {
                 now
         );
     }
+
     public static Comment reconstitute(Long id, TargetType targetType, long targetId, long questionId, long authorId,
-                                      Long parentId, String body, Instant createdAt) {
+                                       Long parentId, String body, Instant createdAt) {
         return new Comment(id, targetType, targetId, questionId, authorId, parentId, body, createdAt);
     }
+
     public void assignId(long id) {
         if (this.id != null) {
             throw new IllegalStateException("ID 已分配");
         }
         this.id = id;
     }
+
     public Long id() { return id; }
     public TargetType targetType() { return targetType; }
     public long targetId() { return targetId; }
