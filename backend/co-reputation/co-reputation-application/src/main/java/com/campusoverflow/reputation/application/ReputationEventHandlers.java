@@ -12,9 +12,11 @@ import com.campusoverflow.reputation.domain.ReputationAccount;
 import com.campusoverflow.reputation.domain.ReputationAccountRepository;
 import com.campusoverflow.reputation.domain.ReputationReason;
 import com.campusoverflow.reputation.domain.ReputationRulebook;
+
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,36 +49,100 @@ public class ReputationEventHandlers {
     @EventListener
     @Transactional
     public void on(UserRegisteredEvent e) {
-        // TODO(S3)：实现 ReputationEventHandlers.on——参考领域单元测试与 arc42 文档中的业务规则
-        throw new UnsupportedOperationException("TODO(S3)：ReputationEventHandlers.on 尚未实现");
+        // TODO 后续补齐业务逻辑
+//        String ledgerKey = "REGISTER:" + e.userId();
+//        if (ledgerService.exists(ledgerKey)) {
+//            return;
+//        }
+//        ReputationAccount account = ReputationAccount.open(e.userId());
+//        accounts.save(account);
+//        ledgerService.record(ledgerKey, e.userId(), ReputationReason.USER_REGISTER, 0, nowDate());
     }
 
-    /** 场景 R-2 的异步后半段：采纳 → 回答者 +15 → 徽章 → 悬赏结算。 */
+    /**
+     * 场景 R-2 的异步后半段：采纳 → 回答者 +15 → 徽章 → 悬赏结算。
+     */
     @EventListener
     @Transactional
     public void on(AnswerAcceptedEvent e) {
-        // TODO(S3)：实现 ReputationEventHandlers.on——参考领域单元测试与 arc42 文档中的业务规则
-        throw new UnsupportedOperationException("TODO(S3)：ReputationEventHandlers.on 尚未实现");
+        // TODO 后续补齐业务逻辑
+//        String ledgerKey = "ACCEPT:" + e.answerId();
+//        if (ledgerService.exists(ledgerKey)) {
+//            return;
+//        }
+//        Long authorId = e.answerAuthorId();
+//        ReputationAccount account = accounts.findById(authorId)
+//                .orElseGet(() -> ReputationAccount.open(authorId));
+//
+//        account.apply(ReputationRulebook.onAnswerAccepted());
+//        accounts.save(account);
+//        ledgerService.record(ledgerKey, authorId, ReputationReason.ANSWER_ACCEPTED, 15, nowDate());
+//
+//        BadgePolicy.evaluate(account).forEach(badge -> badges.grantIfNotExist(account.userId(), badge));
+//
+//        bounties.settleWhenAccepted(e.bountyId(), e.answerId(), authorId);
     }
 
     @EventListener
     @Transactional
     public void on(VoteCastEvent e) {
-        // TODO(S3)：实现 ReputationEventHandlers.on——参考领域单元测试与 arc42 文档中的业务规则
-        throw new UnsupportedOperationException("TODO(S3)：ReputationEventHandlers.on 尚未实现");
+        // TODO 后续补齐业务逻辑
+//        String ledgerKey = "VOTE:" + e.voteId();
+//        if (ledgerService.exists(ledgerKey)) {
+//            return;
+//        }
+//        Long targetUserId = e.targetAuthorId();
+//        ReputationAccount account = accounts.findById(targetUserId)
+//                .orElseGet(() -> ReputationAccount.open(targetUserId));
+//
+//        if (ReputationRulebook.canVoteAddReputation(account, nowDate())) {
+//            int delta = ReputationRulebook.onVote(e.voteTargetType());
+//            account.apply(delta);
+//            accounts.save(account);
+//            ledgerService.record(ledgerKey, targetUserId, ReputationReason.VOTE_CAST, delta, nowDate());
+//            BadgePolicy.evaluate(account).forEach(badge -> badges.grantIfNotExist(account.userId(), badge));
+//        }
     }
 
     @EventListener
     @Transactional
     public void on(AnswerSubmittedEvent e) {
-        // TODO(S3)：实现 ReputationEventHandlers.on——参考领域单元测试与 arc42 文档中的业务规则
-        throw new UnsupportedOperationException("TODO(S3)：ReputationEventHandlers.on 尚未实现");
+        // TODO 后续补齐业务逻辑
+//        String ledgerKey = "SUBMIT_ANSWER:" + e.answerId();
+//        if (ledgerService.exists(ledgerKey)) {
+//            return;
+//        }
+//        Long authorId = e.authorId();
+//        ReputationAccount account = accounts.findById(authorId)
+//                .orElseGet(() -> ReputationAccount.open(authorId));
+//
+//        int delta = ReputationRulebook.onAnswerSubmit();
+//        account.apply(delta);
+//        accounts.save(account);
+//        ledgerService.record(ledgerKey, authorId, ReputationReason.ANSWER_SUBMITTED, delta, nowDate());
+//        BadgePolicy.evaluate(account).forEach(badge -> badges.grantIfNotExist(account.userId(), badge));
     }
 
     @EventListener
     @Transactional
     public void on(AnswerEndorsedEvent e) {
-        // TODO(S3)：实现 ReputationEventHandlers.on——参考领域单元测试与 arc42 文档中的业务规则
-        throw new UnsupportedOperationException("TODO(S3)：ReputationEventHandlers.on 尚未实现");
+        // TODO 后续补齐业务逻辑
+//        String ledgerKey = "ENDORSE:" + e.answerId();
+//        if (ledgerService.exists(ledgerKey)) {
+//            return;
+//        }
+//        Long authorId = e.answerAuthorId();
+//        ReputationAccount account = accounts.findById(authorId)
+//                .orElseGet(() -> ReputationAccount.open(authorId));
+//
+//        int delta = ReputationRulebook.onAnswerEndorsed();
+//        account.apply(delta);
+//        ledgerService.record(ledgerKey, authorId, ReputationReason.ANSWER_ENDORSED, delta, nowDate());
+//        BadgePolicy.evaluate(account).forEach(badge -> badges.grantIfNotExist(account.userId(), badge));
+    }
+
+    // 修复Clock报错
+    private LocalDate nowDate() {
+        return LocalDate.ofInstant(clock.instant(), ZoneOffset.UTC);
     }
 }

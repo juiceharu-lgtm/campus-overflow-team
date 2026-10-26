@@ -7,11 +7,14 @@ import com.campusoverflow.reputation.domain.BadgeType;
 import com.campusoverflow.shared.event.EventIds;
 import com.campusoverflow.shared.event.IntegrationEventPublisher;
 import java.time.Clock;
+import java.time.Instant;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-/** 徽章授予（幂等：已拥有则忽略）。 */
+/**
+ * 徽章授予（幂等：已拥有则忽略）。
+ */
 @Service
 public class BadgeService {
 
@@ -26,8 +29,23 @@ public class BadgeService {
     }
 
     @Transactional(propagation = Propagation.MANDATORY)
-    public void grant(long userId, BadgeType type) {
-        // TODO(S3)：实现 BadgeService.grant——参考领域单元测试与 arc42 文档中的业务规则
-        throw new UnsupportedOperationException("TODO(S3)：BadgeService.grant 尚未实现");
+    public void grant(long userId, BadgeType type, String sourceRefId) {
+        // 幂等判断：用户已经持有该徽章，直接返回
+        if (badges.existsByUserIdAndType(userId, type)) {
+            return;
+        }
+        Instant now = Instant.now(clock);
+        BadgeAward award = BadgeAward.create(userId, type, now);
+        badges.save(award);
+
+        // 5个参数，对齐 BadgeAwardedEvent record，解决参数数量报错
+        BadgeAwardedEvent awardedEvent = new BadgeAwardedEvent(
+                EventIds.next(),
+                now,
+                userId,
+                type,
+                sourceRefId
+        );
+        events.publish(awardedEvent);
     }
 }
