@@ -1,17 +1,20 @@
 package com.campusoverflow.qa.domain;
-
+import com.campusoverflow.shared.domain.BusinessRuleException;
 import com.campusoverflow.shared.domain.Guard;
-
-/** Markdown 正文。只保存原文；渲染与 XSS 净化在基础设施层完成。 */
 public record MarkdownBody(String value) {
-
-    public static MarkdownBody ofQuestion(String raw) {
-        // TODO(S2)：实现 MarkdownBody.ofQuestion——参考领域单元测试与 arc42 文档中的业务规则
-        throw new UnsupportedOperationException("TODO(S2)：MarkdownBody.ofQuestion 尚未实现");
+    public MarkdownBody {
+        // 非空校验
+        value = Guard.requireNonNull(value, "QA-MARKDOWN-001", "markdown内容");
+        // 长度校验，按需调整范围，这里设置0~2000
+        value = Guard.requireText(value, 0, 2000, "QA-MARKDOWN-LEN", "markdown内容");
     }
 
+    // TODO 补齐：问题正文工厂
+    public static MarkdownBody ofQuestion(String raw) {
+        return new MarkdownBody(raw);
+    }
+    // TODO 补齐：回答正文工厂（可以单独控制回答最大长度）
     public static MarkdownBody ofAnswer(String raw) {
-        // TODO(S2)：实现 MarkdownBody.ofAnswer——参考领域单元测试与 arc42 文档中的业务规则
-        throw new UnsupportedOperationException("TODO(S2)：MarkdownBody.ofAnswer 尚未实现");
+        return new MarkdownBody(raw);
     }
 }
