@@ -1,15 +1,21 @@
 package com.campusoverflow.qa.domain;
+
 import com.campusoverflow.shared.domain.BusinessRuleException;
 import com.campusoverflow.shared.domain.ConflictException;
 import com.campusoverflow.shared.domain.ForbiddenException;
 import com.campusoverflow.shared.security.Actor;
+
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
+
 /**
  * 回答聚合根。独立于 Question 聚合以降低并发冲突，通过 questionId 引用问题。
- * “是否被采纳”由 Question.acceptedAnswerId 决定（单一事实来源），这里不重复存储。
+ * 是否被采纳由 Question.acceptedAnswerId 决定（单一事实来源），这里不重复存储。
  */
 public class Answer {
+
     private Long id;
     private final long questionId;
     private final long authorId;
@@ -20,8 +26,19 @@ public class Answer {
     private Instant updatedAt;
     private Instant deletedAt;
     private final long version;
-    private Answer(Long id, long questionId, long authorId, MarkdownBody body, int score, Long endorsedBy,
-                   Instant createdAt, Instant updatedAt, Instant deletedAt, long version) {
+
+    private final List<DomainEvent> domainEvents = new ArrayList<>();
+
+    private Answer(Long id,
+                   long questionId,
+                   long authorId,
+                   MarkdownBody body,
+                   int score,
+                   Long endorsedBy,
+                   Instant createdAt,
+                   Instant updatedAt,
+                   Instant deletedAt,
+                   long version) {
         this.id = id;
         this.questionId = questionId;
         this.authorId = authorId;
@@ -33,10 +50,11 @@ public class Answer {
         this.deletedAt = deletedAt;
         this.version = version;
     }
+
     public static Answer submit(Question question, long authorId, MarkdownBody body, Instant now) {
-        // 先保证问题没有被删除，才允许提交回答
         question.ensureOpenForAnswers();
-        return new Answer(
+
+        Answer answer = new Answer(
                 null,
                 question.id(),
                 authorId,
@@ -48,69 +66,172 @@ public class Answer {
                 null,
                 0
         );
+
+        answer.addEvent(new AnswerSubmittedDomainEvent(
+                answer.id(),
+                answer.questionId(),
+                answer.authorId(),
+                now
+        ));
+
+        return answer;
     }
-    public static Answer reconstitute(Long id, long questionId, long authorId, MarkdownBody body, int score,
-                                      Long endorsedBy, Instant createdAt, Instant updatedAt, Instant deletedAt,
-                                      long version) {
-        return new Answer(id, questionId, authorId, body, score, endorsedBy, createdAt, updatedAt, deletedAt, version);
-    }
-    public void edit(Actor actor, boolean actorManagesCourse, MarkdownBody newBody, Instant now) {
-        ensureNotDeleted();
-        boolean isAuthor = actor.userId() == this.authorId;
-        if (!isAuthor && !actorManagesCourse) {
-            throw new ForbiddenException("QA‑3004", "无权编辑该回答");
-        }
-        this.body = newBody;
-        this.updatedAt = now;
-    }
-    /** 教师认证：课程教师/助教为优质回答打上“教师认证”标记。 */
-    public void endorse(Actor actor, boolean actorManagesCourse) {
-        ensureNotDeleted();
-        if (!actorManagesCourse) {
-            throw new ForbiddenException("QA‑3005", "只有课程管理者可以认证回答");
-        }
-        if (this.endorsedBy != null) {
-            throw new ConflictException("QA‑2003", "该回答已经被认证过");
-        }
-        this.endorsedBy = actor.userId();
-    }
-    /** 被采纳的回答不能由回答者本人删除（避免“先骗采纳再删除”），课程管理者可删除。 */
-    public void softDelete(Actor actor, boolean actorManagesCourse, boolean accepted, Instant now) {
-        ensureNotDeleted();
-        boolean isAuthor = actor.userId() == this.authorId;
-        if (actorManagesCourse) {
-            this.deletedAt = now;
-        } else if (isAuthor) {
-            if (accepted) {
-                throw new BusinessRuleException("QA‑1015", "已经被采纳的回答，作者不能删除");
-            }
-            this.deletedAt = now;
-        } else {
-            throw new ForbiddenException("QA‑3006", "无权删除该回答");
-        }
-    }
-    private void ensureNotDeleted() {
-        if (isDeleted()) {
-            throw new BusinessRuleException("QA‑1021", "回答已删除，不能执行该操作");
-        }
-    }
-    public boolean isDeleted() {
-        return deletedAt != null;
-    }
+
+    /**
+     * 仓储保存后回填聚合 ID。测试和适配器都会调用。
+     */
     public void assignId(long id) {
         if (this.id != null) {
-            throw new IllegalStateException("ID 已分配");
+            throw new ConflictException("QA-2004", "Answer ID 已经赋值，不能重复 assignId");
         }
         this.id = id;
     }
-    public Long id() { return id; }
-    public long questionId() { return questionId; }
-    public long authorId() { return authorId; }
-    public MarkdownBody body() { return body; }
-    public int score() { return score; }
-    public Long endorsedBy() { return endorsedBy; }
-    public Instant createdAt() { return createdAt; }
-    public Instant updatedAt() { return updatedAt; }
-    public Instant deletedAt() { return deletedAt; }
-    public long version() { return version; }
+
+    public void edit(Actor actor, boolean actorManagesCourse, MarkdownBody newBody) {
+        edit(actor, actorManagesCourse, newBody, Instant.now());
+    }
+
+    public void edit(Actor actor, boolean actorManagesCourse, MarkdownBody newBody, Instant now) {
+        ensureNotDeleted();
+
+        if (!(this.authorId == actor.userId() || actorManagesCourse)) {
+            throw new ForbiddenException("QA-3004", "无权编辑该回答");
+        }
+
+        this.body = newBody;
+        this.updatedAt = now;
+
+        addEvent(new AnswerEditedDomainEvent(
+                this.id,
+                this.questionId,
+                actor.userId(),
+                now
+        ));
+    }
+
+    public void endorse(Actor actor, boolean actorManagesCourse) {
+        endorse(actor, actorManagesCourse, Instant.now());
+    }
+
+    public void endorse(Actor actor, boolean actorManagesCourse, Instant now) {
+        ensureNotDeleted();
+
+        if (!actorManagesCourse) {
+            throw new ForbiddenException("QA-3004", "只有课程管理者可以认证回答");
+        }
+
+        if (this.endorsedBy != null) {
+            throw new ConflictException("QA-2003", "该回答已经被教师认证");
+        }
+
+        this.endorsedBy = actor.userId();
+        this.updatedAt = now;
+
+        addEvent(new AnswerEndorsedDomainEvent(
+                this.id,
+                this.questionId,
+                actor.userId(),
+                now
+        ));
+    }
+
+    public void softDelete(Actor actor, boolean actorManagesCourse, boolean answerIsAccepted) {
+        softDelete(actor, actorManagesCourse, answerIsAccepted, Instant.now());
+    }
+
+    public void softDelete(Actor actor, boolean actorManagesCourse, boolean answerIsAccepted, Instant now) {
+        ensureNotDeleted();
+
+        if (this.authorId == actor.userId()) {
+            if (answerIsAccepted) {
+                throw new BusinessRuleException("QA-1012", "被采纳的回答，作者不能删除");
+            }
+        } else if (!actorManagesCourse) {
+            throw new ForbiddenException("QA-3003", "无权删除该回答");
+        }
+
+        this.deletedAt = now;
+        this.updatedAt = now;
+
+        addEvent(new AnswerDeletedDomainEvent(
+                this.id,
+                this.questionId,
+                actor.userId(),
+                now
+        ));
+    }
+
+    public void ensureNotDeleted() {
+        if (isDeleted()) {
+            throw new BusinessRuleException("QA-1020", "内容已删除，不能执行该操作");
+        }
+    }
+
+    public boolean isDeleted() {
+        return deletedAt != null;
+    }
+
+    public static Answer reconstitute(Long id,
+                                       long questionId,
+                                       long authorId,
+                                       MarkdownBody body,
+                                       int score,
+                                       Long endorsedBy,
+                                       Instant createdAt,
+                                       Instant updatedAt,
+                                       Instant deletedAt,
+                                       long version) {
+        return new Answer(id, questionId, authorId, body, score, endorsedBy,
+                createdAt, updatedAt, deletedAt, version);
+    }
+
+    protected void addEvent(DomainEvent event) {
+        domainEvents.add(event);
+    }
+
+    public List<DomainEvent> pullEvents() {
+        List<DomainEvent> copy = new ArrayList<>(domainEvents);
+        domainEvents.clear();
+        return copy;
+    }
+
+    public Long id() {
+        return id;
+    }
+
+    public long questionId() {
+        return questionId;
+    }
+
+    public long authorId() {
+        return authorId;
+    }
+
+    public MarkdownBody body() {
+        return body;
+    }
+
+    public int score() {
+        return score;
+    }
+
+    public Long endorsedBy() {
+        return endorsedBy;
+    }
+
+    public Instant createdAt() {
+        return createdAt;
+    }
+
+    public Instant updatedAt() {
+        return updatedAt;
+    }
+
+    public Instant deletedAt() {
+        return deletedAt;
+    }
+
+    public long version() {
+        return version;
+    }
 }
