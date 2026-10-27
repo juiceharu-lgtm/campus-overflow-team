@@ -22,7 +22,7 @@ class QuestionTest {
 
     static Question persistedQuestion() {
         Question q = Question.post(ASKER.userId(), 100L, new Title("红黑树插入后如何判断旋转方向？"),
-                MarkdownBody.ofQuestion("插入节点后出现连续红色节点，什么时候左旋、什么时候右旋？"),
+                MarkdownBody.ofAnswer("插入节点后出现连续红色节点，什么时候左旋、什么时候右旋？"),
                 Tags.of(List.of("数据结构", "红黑树")), NOW);
         q.assignId(10);
         return q;
@@ -124,7 +124,7 @@ class QuestionTest {
         @Test
         void askerCannotDeleteAnsweredQuestionButManagerCan() {
             Question answered = Question.reconstitute(10L, ASKER.userId(), 100L, new Title("一个已经有回答的问题标题"),
-                    MarkdownBody.ofQuestion("这个问题已经有了一个回答，所以提问者不能删除。"), Tags.of(List.of("java")),
+                    MarkdownBody.ofAnswer("这个问题已经有了一个回答，所以提问者不能删除。"), Tags.of(List.of("java")),
                     null, 0, 1, 0, NOW, NOW, null, 0);
             assertThatThrownBy(() -> answered.softDelete(ASKER, false, NOW)).isInstanceOf(BusinessRuleException.class);
             answered.softDelete(TEACHER, true, NOW);
