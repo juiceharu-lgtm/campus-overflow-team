@@ -33,7 +33,7 @@ public class QuestionRepositoryAdapter implements QuestionRepository {
                 ? new QuestionJpaEntity(q.authorId(), q.courseId(), q.createdAt())
                 : jpa.findById(q.id()).orElseThrow();
         e.setTitle(q.title().value());
-        e.setBody(q.body().content());
+        e.setBody(q.body().value());
         e.getTags().clear();
         e.getTags().addAll(q.tags().names());
         e.setAcceptedAnswerId(q.acceptedAnswerId());

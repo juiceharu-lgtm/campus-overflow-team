@@ -27,7 +27,7 @@ public class AnswerRepositoryAdapter implements AnswerRepository {
         AnswerJpaEntity e = a.id() == null
                 ? new AnswerJpaEntity(a.questionId(), a.authorId(), a.createdAt())
                 : jpa.findById(a.id()).orElseThrow();
-        e.setBody(a.body().content());
+        e.setBody(a.body().value());
         e.setEndorsedBy(a.endorsedBy());
         e.setUpdatedAt(a.updatedAt());
         e.setDeletedAt(a.deletedAt());
