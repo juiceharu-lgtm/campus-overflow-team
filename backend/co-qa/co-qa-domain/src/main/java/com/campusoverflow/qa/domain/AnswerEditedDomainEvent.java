@@ -5,6 +5,7 @@ import java.time.Instant;
 public record AnswerEditedDomainEvent(
         Long answerId,
         long questionId,
-        long operatorUserId,
+        long operatorId,
         Instant occurredAt
-) implements DomainEvent {}
+) implements DomainEvent {
+}
