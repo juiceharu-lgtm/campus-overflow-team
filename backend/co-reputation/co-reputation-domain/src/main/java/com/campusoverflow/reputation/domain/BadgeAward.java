@@ -4,36 +4,31 @@ import java.time.Instant;
 
 public class BadgeAward {
 
+    // 内部枚举，对应 BadgeAward.Trigger
     public enum Trigger {
-        REGISTER,
-        ANSWER_SUBMIT,
-        ANSWER_ACCEPTED,
-        VOTE,
-        ANSWER_ENDORSED
+        ANSWER,
+        ACCEPT,
+        LIKE,
+        CHECK_IN
     }
 
     private Long id;
     private Long userId;
     private String badgeCode;
-    private Trigger trigger;
-    private Instant awardedAt;
+    private Instant awardTime;
 
-    protected BadgeAward() {
+    // 领域构造方法，发放徽章
+    public static BadgeAward award(Long userId, String badgeCode, Instant awardTime) {
+        BadgeAward award = new BadgeAward();
+        award.userId = userId;
+        award.badgeCode = badgeCode;
+        award.awardTime = awardTime;
+        return award;
     }
 
-    public BadgeAward(Long userId, String badgeCode, Trigger trigger, Instant now) {
-        this.userId = userId;
-        this.badgeCode = badgeCode;
-        this.trigger = trigger;
-        this.awardedAt = now;
-    }
-
+    // getter
     public Long getId() {
         return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public Long getUserId() {
@@ -44,11 +39,7 @@ public class BadgeAward {
         return badgeCode;
     }
 
-    public Trigger getTrigger() {
-        return trigger;
-    }
-
-    public Instant getAwardedAt() {
-        return awardedAt;
+    public Instant getAwardTime() {
+        return awardTime;
     }
 }

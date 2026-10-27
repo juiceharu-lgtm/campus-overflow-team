@@ -1,55 +1,28 @@
 package com.campusoverflow.reputation.domain;
 
-import java.time.Instant;
-
+// 聚合根 ReputationAccount
 public class ReputationAccount {
 
-    private Long id;
-    private Long userId;
-    private int totalScore;
-    private Instant createdAt;
-    private Instant updatedAt;
+    private final ReputationAccountId id;
+    private int score;
 
-    protected ReputationAccount() {
+    // 构造器
+    public ReputationAccount(ReputationAccountId id, int score) {
+        this.id = id;
+        this.score = score;
     }
 
-    private ReputationAccount(Long userId, int initScore, Instant now) {
-        this.userId = userId;
-        this.totalScore = initScore;
-        this.createdAt = now;
-        this.updatedAt = now;
+    // 领域行为（业务方法，不要放setter）
+    public void addScore(int delta) {
+        this.score += delta;
     }
 
-    public static ReputationAccount create(Long userId, int initScore, Instant now) {
-        return new ReputationAccount(userId, initScore, now);
-    }
-
-    public void addScore(int delta, Instant now) {
-        this.totalScore += delta;
-        this.updatedAt = now;
-    }
-
-    public Long getId() {
+    // getter
+    public ReputationAccountId getId() {
         return id;
     }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Long getUserId() {
-        return userId;
-    }
-
-    public int getTotalScore() {
-        return totalScore;
-    }
-
-    public Instant getCreatedAt() {
-        return createdAt;
-    }
-
-    public Instant getUpdatedAt() {
-        return updatedAt;
+    public int getScore() {
+        return score;
     }
 }
