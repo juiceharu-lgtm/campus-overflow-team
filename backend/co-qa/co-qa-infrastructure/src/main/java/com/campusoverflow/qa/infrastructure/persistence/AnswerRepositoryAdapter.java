@@ -18,7 +18,7 @@ public class AnswerRepositoryAdapter implements AnswerRepository {
     @Override
     public Optional<Answer> findById(long id) {
         return jpa.findById(id).map(e -> Answer.reconstitute(e.getId(), e.getQuestionId(), e.getAuthorId(),
-                MarkdownBody.ofAnswer(e.getBody()), e.getScore(), e.getEndorsedBy(), e.getCreatedAt(), e.getUpdatedAt(),
+                new MarkdownBody(e.getBody()), e.getScore(), e.getEndorsedBy(), e.getCreatedAt(), e.getUpdatedAt(),
                 e.getDeletedAt(), e.getVersion()));
     }
 
