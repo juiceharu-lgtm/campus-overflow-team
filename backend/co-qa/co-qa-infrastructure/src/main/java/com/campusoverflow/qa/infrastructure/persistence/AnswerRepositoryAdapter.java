@@ -32,10 +32,10 @@ public class AnswerRepositoryAdapter implements AnswerRepository {
         e.setUpdatedAt(a.updatedAt());
         e.setDeletedAt(a.deletedAt());
         AnswerJpaEntity saved = jpa.save(e);
-        if (a.id() == null) {
-            a.assignId(saved.getId());
-        }
-        return a;
+        // 删掉 a.assignId(saved.getId())，因为 Answer 的 id 是 final，不支持事后赋值
+        return Answer.reconstitute(saved.getId(), saved.getQuestionId(), saved.getAuthorId(),
+                new MarkdownBody(saved.getBody()), saved.getScore(), saved.getEndorsedBy(),
+                saved.getCreatedAt(), saved.getUpdatedAt(), saved.getDeletedAt(), saved.getVersion());
     }
 
     @Override
