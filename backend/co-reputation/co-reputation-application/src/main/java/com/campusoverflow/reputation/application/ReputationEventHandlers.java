@@ -5,144 +5,101 @@ import com.campusoverflow.qa.api.event.AnswerAcceptedEvent;
 import com.campusoverflow.qa.api.event.AnswerEndorsedEvent;
 import com.campusoverflow.qa.api.event.AnswerSubmittedEvent;
 import com.campusoverflow.qa.api.event.VoteCastEvent;
-import com.campusoverflow.reputation.domain.BadgePolicy;
-import com.campusoverflow.reputation.domain.BadgeType;
-import com.campusoverflow.reputation.domain.LedgerRepository;
-import com.campusoverflow.reputation.domain.ReputationAccount;
-import com.campusoverflow.reputation.domain.ReputationAccountRepository;
-import com.campusoverflow.reputation.domain.ReputationReason;
+import com.campusoverflow.reputation.domain.BadgeAward;
+import com.campusoverflow.reputation.domain.BadgeService;
+import com.campusoverflow.reputation.domain.ReputationLedgerService;
 import com.campusoverflow.reputation.domain.ReputationRulebook;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.stereotype.Service;
 
 import java.time.Clock;
-import java.time.LocalDate;
-import java.time.ZoneOffset;
+import java.time.Instant;
 
-import org.springframework.context.event.EventListener;
-import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
-
-/**
- * 订阅上游上下文的集成事件（由 OutboxRelay 在事务提交后投递，至少一次语义）。
- * 每个处理器运行在自己的事务中，并通过账本唯一键 / 徽章存在性检查实现幂等。
- */
-@Component
+@SuppressWarnings("unused")
+@Service
 public class ReputationEventHandlers {
 
-    private final ReputationAccountRepository accounts;
-    private final LedgerRepository ledger;
     private final ReputationLedgerService ledgerService;
-    private final BadgeService badges;
-    private final BountyService bounties;
+    private final BadgeService badgeService;
+    private final BountyService bountyService;
     private final Clock clock;
 
-    public ReputationEventHandlers(ReputationAccountRepository accounts, LedgerRepository ledger,
-                                   ReputationLedgerService ledgerService, BadgeService badges,
-                                   BountyService bounties, Clock clock) {
-        this.accounts = accounts;
-        this.ledger = ledger;
+    public ReputationEventHandlers(ReputationLedgerService ledgerService,
+                                   BadgeService badgeService,
+                                   BountyService bountyService,
+                                   Clock clock) {
         this.ledgerService = ledgerService;
-        this.badges = badges;
-        this.bounties = bounties;
+        this.badgeService = badgeService;
+        this.bountyService = bountyService;
         this.clock = clock;
     }
 
-    @EventListener
-    @Transactional
     public void on(UserRegisteredEvent e) {
-        // TODO 后续补齐业务逻辑
-//        String ledgerKey = "REGISTER:" + e.userId();
-//        if (ledgerService.exists(ledgerKey)) {
-//            return;
-//        }
-//        ReputationAccount account = ReputationAccount.open(e.userId());
-//        accounts.save(account);
-//        ledgerService.record(ledgerKey, e.userId(), ReputationReason.USER_REGISTER, 0, nowDate());
+        Instant now = clock.instant();
+        if (!ledgerService.existsAccount(e.userId())) {
+            ledgerService.createAccount(e.userId(), ReputationRulebook.REGISTER_INIT, now);
+        }
+        badgeService.evaluateAndAward(e.userId(), BadgeAward.Trigger.REGISTER, now);
     }
 
-    /**
-     * 场景 R-2 的异步后半段：采纳 → 回答者 +15 → 徽章 → 悬赏结算。
-     */
-    @EventListener
-    @Transactional
-    public void on(AnswerAcceptedEvent e) {
-        // TODO 后续补齐业务逻辑
-//        String ledgerKey = "ACCEPT:" + e.answerId();
-//        if (ledgerService.exists(ledgerKey)) {
-//            return;
-//        }
-//        Long authorId = e.answerAuthorId();
-//        ReputationAccount account = accounts.findById(authorId)
-//                .orElseGet(() -> ReputationAccount.open(authorId));
-//
-//        account.apply(ReputationRulebook.onAnswerAccepted());
-//        accounts.save(account);
-//        ledgerService.record(ledgerKey, authorId, ReputationReason.ANSWER_ACCEPTED, 15, nowDate());
-//
-//        BadgePolicy.evaluate(account).forEach(badge -> badges.grantIfNotExist(account.userId(), badge));
-//
-//        bounties.settleWhenAccepted(e.bountyId(), e.answerId(), authorId);
-    }
-
-    @EventListener
-    @Transactional
-    public void on(VoteCastEvent e) {
-        // TODO 后续补齐业务逻辑
-//        String ledgerKey = "VOTE:" + e.voteId();
-//        if (ledgerService.exists(ledgerKey)) {
-//            return;
-//        }
-//        Long targetUserId = e.targetAuthorId();
-//        ReputationAccount account = accounts.findById(targetUserId)
-//                .orElseGet(() -> ReputationAccount.open(targetUserId));
-//
-//        if (ReputationRulebook.canVoteAddReputation(account, nowDate())) {
-//            int delta = ReputationRulebook.onVote(e.voteTargetType());
-//            account.apply(delta);
-//            accounts.save(account);
-//            ledgerService.record(ledgerKey, targetUserId, ReputationReason.VOTE_CAST, delta, nowDate());
-//            BadgePolicy.evaluate(account).forEach(badge -> badges.grantIfNotExist(account.userId(), badge));
-//        }
-    }
-
-    @EventListener
-    @Transactional
     public void on(AnswerSubmittedEvent e) {
-        // TODO 后续补齐业务逻辑
-//        String ledgerKey = "SUBMIT_ANSWER:" + e.answerId();
-//        if (ledgerService.exists(ledgerKey)) {
-//            return;
-//        }
-//        Long authorId = e.authorId();
-//        ReputationAccount account = accounts.findById(authorId)
-//                .orElseGet(() -> ReputationAccount.open(authorId));
-//
-//        int delta = ReputationRulebook.onAnswerSubmit();
-//        account.apply(delta);
-//        accounts.save(account);
-//        ledgerService.record(ledgerKey, authorId, ReputationReason.ANSWER_SUBMITTED, delta, nowDate());
-//        BadgePolicy.evaluate(account).forEach(badge -> badges.grantIfNotExist(account.userId(), badge));
+        Instant now = clock.instant();
+        ledgerService.addScore(e.authorId(), ReputationRulebook.ANSWER_SUBMIT, now);
+        badgeService.evaluateAndAward(e.authorId(), BadgeAward.Trigger.ANSWER_SUBMIT, now);
     }
 
-    @EventListener
-    @Transactional
+    public void on(AnswerAcceptedEvent e) {
+        Instant now = clock.instant();
+        int delta = ReputationRulebook.acceptedDelta(e.answerAuthorId(), e.questionOwnerId());
+        ledgerService.addScore(e.answerAuthorId(), delta, now);
+
+        if (e.bountyId() > 0) {
+            bountyService.settleOnAccept(
+                    e.questionOwnerId(),
+                    e.answerId(),
+                    e.answerAuthorId(),
+                    e.eventId()
+            );
+        }
+        badgeService.evaluateAndAward(e.answerAuthorId(), BadgeAward.Trigger.ANSWER_ACCEPTED, now);
+    }
+
+    public void on(VoteCastEvent e) {
+        Instant now = clock.instant();
+        // 等VoteCastEvent补上 int value 再打开计分
+        // int delta = ReputationRulebook.voteEffect(e.value());
+        // ledgerService.addScore(e.targetAuthorId(), delta, now);
+        // badgeService.evaluateAndAward(e.targetAuthorId(), BadgeAward.Trigger.VOTE, now);
+    }
+
     public void on(AnswerEndorsedEvent e) {
-        // TODO 后续补齐业务逻辑
-//        String ledgerKey = "ENDORSE:" + e.answerId();
-//        if (ledgerService.exists(ledgerKey)) {
-//            return;
-//        }
-//        Long authorId = e.answerAuthorId();
-//        ReputationAccount account = accounts.findById(authorId)
-//                .orElseGet(() -> ReputationAccount.open(authorId));
-//
-//        int delta = ReputationRulebook.onAnswerEndorsed();
-//        account.apply(delta);
-//        ledgerService.record(ledgerKey, authorId, ReputationReason.ANSWER_ENDORSED, delta, nowDate());
-//        BadgePolicy.evaluate(account).forEach(badge -> badges.grantIfNotExist(account.userId(), badge));
+        Instant now = clock.instant();
+        ledgerService.addScore(e.answerAuthorId(), ReputationRulebook.ENDORSE, now);
+        badgeService.evaluateAndAward(e.answerAuthorId(), BadgeAward.Trigger.ANSWER_ENDORSED, now);
     }
 
-    // 修复Clock报错
-    private LocalDate nowDate() {
-        return LocalDate.ofInstant(clock.instant(), ZoneOffset.UTC);
+    @KafkaListener(topics = "${kafka.topics.user-registered}")
+    public void listenUserRegistered(UserRegisteredEvent event) {
+        on(event);
+    }
+
+    @KafkaListener(topics = "${kafka.topics.answer-submitted}")
+    public void listenAnswerSubmitted(AnswerSubmittedEvent event) {
+        on(event);
+    }
+
+    @KafkaListener(topics = "${kafka.topics.answer-accepted}")
+    public void listenAnswerAccepted(AnswerAcceptedEvent event) {
+        on(event);
+    }
+
+    @KafkaListener(topics = "${kafka.topics.vote-cast}")
+    public void listenVoteCast(VoteCastEvent event) {
+        on(event);
+    }
+
+    @KafkaListener(topics = "${kafka.topics.answer-endorsed}")
+    public void listenAnswerEndorsed(AnswerEndorsedEvent event) {
+        on(event);
     }
 }

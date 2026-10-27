@@ -1,39 +1,54 @@
 package com.campusoverflow.reputation.domain;
 
-import jakarta.persistence.*;
 import java.time.Instant;
 
-@Entity
-@Table(name = "user_badge")
 public class BadgeAward {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+
+    public enum Trigger {
+        REGISTER,
+        ANSWER_SUBMIT,
+        ANSWER_ACCEPTED,
+        VOTE,
+        ANSWER_ENDORSED
+    }
+
     private Long id;
-
-    @Column(nullable = false)
-    private long userId;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private BadgeType type;
-
-    @Column(nullable = false)
+    private Long userId;
+    private String badgeCode;
+    private Trigger trigger;
     private Instant awardedAt;
 
-    protected BadgeAward() {}
+    protected BadgeAward() {
+    }
 
-    private BadgeAward(long userId, BadgeType type, Instant awardedAt) {
+    public BadgeAward(Long userId, String badgeCode, Trigger trigger, Instant now) {
         this.userId = userId;
-        this.type = type;
-        this.awardedAt = awardedAt;
+        this.badgeCode = badgeCode;
+        this.trigger = trigger;
+        this.awardedAt = now;
     }
 
-    public static BadgeAward create(long userId, BadgeType type, Instant awardedAt) {
-        return new BadgeAward(userId, type, awardedAt);
+    public Long getId() {
+        return id;
     }
 
-    public Long getId() { return id; }
-    public long getUserId() { return userId; }
-    public BadgeType getType() { return type; }
-    public Instant getAwardedAt() { return awardedAt; }
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public String getBadgeCode() {
+        return badgeCode;
+    }
+
+    public Trigger getTrigger() {
+        return trigger;
+    }
+
+    public Instant getAwardedAt() {
+        return awardedAt;
+    }
 }

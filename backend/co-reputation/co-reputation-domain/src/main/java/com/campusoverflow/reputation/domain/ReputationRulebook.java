@@ -17,6 +17,11 @@ public final class ReputationRulebook {
     public static final int DOWNVOTE = -2;
     public static final int DAILY_VOTE_CAP = 200;
 
+    // 新增处理器需要用到的常量
+    public static final int REGISTER_INIT = 10;
+    public static final int ANSWER_SUBMIT = 5;
+    public static final int ENDORSE = 3;
+
     private ReputationRulebook() {
     }
 
