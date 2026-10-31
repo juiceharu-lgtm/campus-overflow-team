@@ -13,12 +13,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.Instant;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -46,7 +45,8 @@ class EndorseAnswerUseCaseTest {
 
         useCase.execute(teacherActor, 10L);
 
-        verify(answer).endorse(eq(teacherActor), eq(true), any(Instant.class));
+        // 这里改：只传两个参数，去掉 Instant
+        verify(answer).endorse(eq(teacherActor), eq(true));
         verify(answerRepository).save(answer);
     }
 
