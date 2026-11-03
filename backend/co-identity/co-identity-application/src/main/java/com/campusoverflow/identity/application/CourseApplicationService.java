@@ -38,11 +38,11 @@ public class CourseApplicationService {
     @Transactional
     public void approve(Actor operator, Long applicationId) {
         CourseApplication application = courseApplicationRepository.findById(applicationId)
-                .orElseThrow(() -> new NotFoundException("ID‑4003", "选课申请不存在"));
+                .orElseThrow(() -> new NotFoundException("ID-3001", "选课申请不存在"));
 
         boolean canManage = identityApi.canManageCourse(operator.userId(), application.getCourseId());
         if (!canManage) {
-            throw new ForbiddenException("ID‑3003", "只有课程管理者可以审批选课申请");
+            throw new ForbiddenException("ID-3003", "只有课程管理者可以审批选课申请");
         }
 
         application.approve(clock.instant());
@@ -66,11 +66,11 @@ public class CourseApplicationService {
     @Transactional
     public void reject(Actor operator, Long applicationId, String rejectReason) {
         CourseApplication application = courseApplicationRepository.findById(applicationId)
-                .orElseThrow(() -> new NotFoundException("ID‑4003", "选课申请不存在"));
+                .orElseThrow(() -> new NotFoundException("ID-3001", "选课申请不存在"));
 
         boolean canManage = identityApi.canManageCourse(operator.userId(), application.getCourseId());
         if (!canManage) {
-            throw new ForbiddenException("ID‑3003", "只有课程管理者可以审批选课申请");
+            throw new ForbiddenException("ID-3003", "只有课程管理者可以审批选课申请");
         }
 
         application.reject(rejectReason, clock.instant());
