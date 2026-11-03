@@ -57,16 +57,18 @@ class AnswerServiceTest {
         Tags tags = Tags.of(List.of("java"));
         Question question = Question.post(questionAuthor.userId(), 1L,
                 title,
-                MarkdownBody.ofQuestion("问题内容"),
+                MarkdownBody.ofQuestion("这里是一段满足长度校验的问题详细正文，用来描述我在DDD学习过程遇到的疑惑"),
                 tags, now);
         question.assignId(questionId);
         when(questionRepository.findById(questionId)).thenReturn(Optional.of(question));
 
-        Answer answer = Answer.submit(question, 2001L, MarkdownBody.ofAnswer("回答内容"), now);
+        Answer answer = Answer.submit(question, 2001L,
+                MarkdownBody.ofAnswer("这是一段满足长度规则的回答正文，提供DDD学习的实践思路与参考资料"),
+                now);
         answer.assignId(answerId);
         when(answerRepository.save(any(Answer.class))).thenReturn(answer);
 
-        PostAnswerCommand cmd = new PostAnswerCommand(questionId, "回答内容");
+        PostAnswerCommand cmd = new PostAnswerCommand(questionId, "这是一段满足长度规则的回答正文，提供DDD学习的实践思路与参考资料");
         long resultId = service.post(new Actor(2001L, "回答者", Role.STUDENT), cmd);
 
         assertEquals(answerId, resultId);
@@ -80,12 +82,16 @@ class AnswerServiceTest {
         Tags tags = Tags.of(List.of("java"));
         Question question = Question.post(questionAuthor.userId(), 1L,
                 title,
-                MarkdownBody.ofQuestion("问题内容"),
+                MarkdownBody.ofQuestion("这里是一段满足长度校验的问题详细正文，用来描述我在DDD学习过程遇到的疑惑"),
                 tags, now);
         question.assignId(questionId);
 
-        Answer answer = Answer.submit(question, 2001L, MarkdownBody.ofAnswer("回答"), now);
+        Answer answer = Answer.submit(question, 2001L,
+                MarkdownBody.ofAnswer("这是一段满足长度规则的回答正文，提供DDD学习的实践思路与参考资料"),
+                now);
         answer.assignId(answerId);
+        when(answerRepository.save(any(Answer.class))).thenReturn(answer);
+        when(questionRepository.save(any(Question.class))).thenReturn(question);
 
         when(answerRepository.findById(answerId)).thenReturn(Optional.of(answer));
         when(questionRepository.findById(questionId)).thenReturn(Optional.of(question));
@@ -104,13 +110,17 @@ class AnswerServiceTest {
         Tags tags = Tags.of(List.of("java"));
         Question question = Question.post(questionAuthor.userId(), 1L,
                 title,
-                MarkdownBody.ofQuestion("问题内容"),
+                MarkdownBody.ofQuestion("这里是一段满足长度校验的问题详细正文，用来描述我在DDD学习过程遇到的疑惑"),
                 tags, now);
         question.assignId(questionId);
 
-        Answer answer1 = Answer.submit(question, 2001L, MarkdownBody.ofAnswer("回答1"), now);
+        Answer answer1 = Answer.submit(question, 2001L,
+                MarkdownBody.ofAnswer("这是一段满足长度规则的回答正文，提供DDD学习的实践思路与参考资料"),
+                now);
         answer1.assignId(answerId);
-        Answer answer2 = Answer.submit(question, 2002L, MarkdownBody.ofAnswer("回答2"), now);
+        Answer answer2 = Answer.submit(question, 2002L,
+                MarkdownBody.ofAnswer("这是另一段满足长度规则的回答正文，补充相关实现细节"),
+                now);
         answer2.assignId(21L);
 
         when(answerRepository.findById(21L)).thenReturn(Optional.of(answer2));
@@ -121,7 +131,7 @@ class AnswerServiceTest {
 
         ConflictException ex = assertThrows(ConflictException.class, () ->
                 service.accept(questionAuthor, 21L, false));
-        assertTrue(ex.getMessage().contains("已经存在被采纳的答案"));
+        assertEquals("QA‑2002", ex.code());
     }
 
     @Test
@@ -131,12 +141,15 @@ class AnswerServiceTest {
         Tags tags = Tags.of(List.of("java"));
         Question question = Question.post(questionAuthor.userId(), 1L,
                 title,
-                MarkdownBody.ofQuestion("问题内容"),
+                MarkdownBody.ofQuestion("这里是一段满足长度校验的问题详细正文，用来描述我在DDD学习过程遇到的疑惑"),
                 tags, now);
         question.assignId(questionId);
 
-        Answer answer = Answer.submit(question, 2001L, MarkdownBody.ofAnswer("回答"), now);
+        Answer answer = Answer.submit(question, 2001L,
+                MarkdownBody.ofAnswer("这是一段满足长度规则的回答正文，提供DDD学习的实践思路与参考资料"),
+                now);
         answer.assignId(answerId);
+        when(answerRepository.save(any(Answer.class))).thenReturn(answer);
 
         when(answerRepository.findById(answerId)).thenReturn(Optional.of(answer));
         when(questionRepository.findById(questionId)).thenReturn(Optional.of(question));
@@ -154,11 +167,13 @@ class AnswerServiceTest {
         Tags tags = Tags.of(List.of("java"));
         Question question = Question.post(questionAuthor.userId(), 1L,
                 title,
-                MarkdownBody.ofQuestion("问题内容"),
+                MarkdownBody.ofQuestion("这里是一段满足长度校验的问题详细正文，用来描述我在DDD学习过程遇到的疑惑"),
                 tags, now);
         question.assignId(questionId);
 
-        Answer answer = Answer.submit(question, 2001L, MarkdownBody.ofAnswer("回答"), now);
+        Answer answer = Answer.submit(question, 2001L,
+                MarkdownBody.ofAnswer("这是一段满足长度规则的回答正文，提供DDD学习的实践思路与参考资料"),
+                now);
         answer.assignId(answerId);
 
         when(answerRepository.findById(answerId)).thenReturn(Optional.of(answer));
@@ -167,6 +182,6 @@ class AnswerServiceTest {
         Actor normalStudent = new Actor(555L, "普通学生", Role.STUDENT);
         ForbiddenException ex = assertThrows(ForbiddenException.class, () ->
                 service.endorse(normalStudent, answerId, false));
-        assertTrue(ex.getMessage().contains("只有课程管理者可以认证回答"));
+        assertEquals("无权执行教师认证", ex.code());
     }
 }

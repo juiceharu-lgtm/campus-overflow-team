@@ -13,10 +13,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Instant;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -28,6 +30,8 @@ class EndorseAnswerUseCaseTest {
     private QuestionRepository questionRepository;
     @Mock
     private IdentityApi identityApi;
+    @Mock
+    private Instant now;
 
     @InjectMocks
     private EndorseAnswerUseCase useCase;
@@ -38,15 +42,17 @@ class EndorseAnswerUseCaseTest {
     void execute_success_when_teacher_endorse() {
         Answer answer = mock(Answer.class);
         Question question = mock(Question.class);
+        Instant fixedNow = Instant.parse("2026-11-01T12:00:00Z");
+
         when(answerRepository.findById(10L)).thenReturn(Optional.of(answer));
         when(answer.questionId()).thenReturn(20L);
         when(questionRepository.findById(20L)).thenReturn(Optional.of(question));
-        when(identityApi.canManageCourse(2L, any())).thenReturn(true);
+        when(identityApi.canManageCourse(eq(2L), any())).thenReturn(true);
 
         useCase.execute(teacherActor, 10L);
 
-        // 这里改：只传两个参数，去掉 Instant
-        verify(answer).endorse(eq(teacherActor), eq(true));
+        // 补齐第三个 Instant 参数，和领域方法签名对齐
+        verify(answer).endorse(eq(teacherActor), eq(true), any(Instant.class));
         verify(answerRepository).save(answer);
     }
 

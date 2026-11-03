@@ -13,12 +13,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.Instant;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -39,15 +38,18 @@ class SoftDeleteAnswerUseCaseTest {
     void execute_success_owner_delete() {
         Answer answer = mock(Answer.class);
         Question question = mock(Question.class);
+
         when(answerRepository.findById(10L)).thenReturn(Optional.of(answer));
         when(answer.questionId()).thenReturn(20L);
         when(questionRepository.findById(20L)).thenReturn(Optional.of(question));
-        when(identityApi.canManageCourse(1L, any())).thenReturn(false);
+        // 给question打桩courseId，匹配canManageCourse参数
+        when(question.courseId()).thenReturn(999L);
+        when(identityApi.canManageCourse(1L, 999L)).thenReturn(false);
         when(question.isAccepted(10L)).thenReturn(false);
 
         useCase.execute(actor, 10L);
 
-        verify(answer).softDelete(eq(actor), eq(false), eq(false), any(Instant.class));
+        verify(answer).softDelete(eq(actor), eq(false), eq(false), any());
         verify(answerRepository).save(answer);
     }
 
