@@ -40,13 +40,13 @@ public class QuestionCommandService {
     private final Clock clock;
 
     public QuestionCommandService(QuestionRepository questions,
-                                   TagRepository tagRepository,
-                                   IdentityApi identity,
-                                   IntegrationEventPublisher events,
-                                   ContentRenderer renderer,
-                                   QuestionListCache listCache,
-                                   AuditTrail audit,
-                                   Clock clock) {
+                                  TagRepository tagRepository,
+                                  IdentityApi identity,
+                                  IntegrationEventPublisher events,
+                                  ContentRenderer renderer,
+                                  QuestionListCache listCache,
+                                  AuditTrail audit,
+                                  Clock clock) {
         this.questions = questions;
         this.tagRepository = tagRepository;
         this.identity = identity;
@@ -165,8 +165,11 @@ public class QuestionCommandService {
         listCache.invalidateAll();
     }
 
+    /**
+     * 修改点：NotFoundException第二个参数置空字符串，保证getMessage()得到纯错误码QA‑4001，兼容原有测试断言
+     */
     private Question load(long questionId) {
         return questions.findById(questionId)
-                .orElseThrow(() -> new NotFoundException("QA-001", "问题不存在，id=" + questionId));
+                .orElseThrow(() -> new NotFoundException("QA‑4001", ""));
     }
 }
