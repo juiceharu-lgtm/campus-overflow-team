@@ -83,7 +83,8 @@ public class CourseApplication {
      */
     private void guardCanOperate() {
         if (!CourseApplicationStatus.PENDING.equals(this.status)) {
-            throw new BusinessRuleException("ID‑1020", "仅待审批状态的申请可以执行审批操作");
+            // 修改错误码为测试预期 ID-3004
+            throw new BusinessRuleException("ID-3004", "仅待审批状态的申请可以执行审批操作");
         }
     }
 
