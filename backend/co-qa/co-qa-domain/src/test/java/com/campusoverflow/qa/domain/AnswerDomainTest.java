@@ -57,7 +57,7 @@ class AnswerDomainTest {
         Answer ans = buildNormalAnswer();
         ForbiddenException ex = assertThrows(ForbiddenException.class,
                 () -> ans.edit(otherStudentActor, false, newBody, now));
-        assertEquals("QA‑3004", ex.getMessage());
+        assertEquals("QA-3004", ex.getMessage());
     }
 
     // edit：已经删除的回答不能编辑
@@ -67,7 +67,7 @@ class AnswerDomainTest {
         ans.softDelete(teacherManagerActor, true, false, now);
         BusinessRuleException ex = assertThrows(BusinessRuleException.class,
                 () -> ans.edit(authorActor, false, newBody, now));
-        assertEquals("QA‑1021", ex.getMessage());
+        assertEquals("QA-1021", ex.getMessage());
     }
 
     // endorse：课程教师认证回答成功
@@ -85,7 +85,7 @@ class AnswerDomainTest {
         ans.endorse(teacherManagerActor, true);
         ConflictException ex = assertThrows(ConflictException.class,
                 () -> ans.endorse(teacherManagerActor, true));
-        assertEquals("QA‑2003", ex.getMessage());
+        assertEquals("QA-2003", ex.getMessage());
     }
 
     // endorse：普通学生不能认证回答
@@ -94,7 +94,7 @@ class AnswerDomainTest {
         Answer ans = buildNormalAnswer();
         ForbiddenException ex = assertThrows(ForbiddenException.class,
                 () -> ans.endorse(otherStudentActor, false));
-        assertEquals("QA‑3005", ex.getMessage());
+        assertEquals("QA-3005", ex.getMessage());
     }
 
     // endorse：已删除回答不能认证
@@ -104,7 +104,7 @@ class AnswerDomainTest {
         ans.softDelete(teacherManagerActor, true, false, now);
         BusinessRuleException ex = assertThrows(BusinessRuleException.class,
                 () -> ans.endorse(teacherManagerActor, true));
-        assertEquals("QA‑1021", ex.getMessage());
+        assertEquals("QA-1021", ex.getMessage());
     }
 
     // softDelete：作者删除未被采纳的回答，成功
@@ -121,7 +121,7 @@ class AnswerDomainTest {
         Answer ans = buildNormalAnswer();
         BusinessRuleException ex = assertThrows(BusinessRuleException.class,
                 () -> ans.softDelete(authorActor, false, true, now));
-        assertEquals("QA‑1015", ex.getMessage());
+        assertEquals("QA-1015", ex.getMessage());
     }
 
     // softDelete：别的学生无权删除
@@ -130,7 +130,7 @@ class AnswerDomainTest {
         Answer ans = buildNormalAnswer();
         ForbiddenException ex = assertThrows(ForbiddenException.class,
                 () -> ans.softDelete(otherStudentActor, false, false, now));
-        assertEquals("QA‑3006", ex.getMessage());
+        assertEquals("QA-3006", ex.getMessage());
     }
 
     // softDelete：课程管理员可以随便删（哪怕已采纳）
@@ -148,6 +148,6 @@ class AnswerDomainTest {
         ans.softDelete(teacherManagerActor, true, false, now);
         BusinessRuleException ex = assertThrows(BusinessRuleException.class,
                 () -> ans.softDelete(teacherManagerActor, true, false, now));
-        assertEquals("QA‑1021", ex.getMessage());
+        assertEquals("QA-1021", ex.getMessage());
     }
 }

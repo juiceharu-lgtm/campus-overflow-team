@@ -45,7 +45,8 @@ class QuestionServiceTest {
     @Test
     void post_success() {
         List<String> inputTags = List.of("DDD", "Java");
-        PostQuestionCommand cmd = new PostQuestionCommand(5001L, "Java DDD怎么学", "请教DDD实践", inputTags);
+        //  修改body文本，长度满足 MarkdownBody.ofQuestion 10~2000字符校验
+        PostQuestionCommand cmd = new PostQuestionCommand(5001L, "Java DDD怎么学", "我想学习DDD领域驱动设计，想请教实际项目落地的实践方法", inputTags);
         when(clock.instant()).thenReturn(now);
 
         Title title = new Title(cmd.title());

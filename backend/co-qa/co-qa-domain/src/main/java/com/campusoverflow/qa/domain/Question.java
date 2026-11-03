@@ -54,7 +54,6 @@ public class Question {
     }
 
     public static Question post(long authorId, Long courseId, Title title, MarkdownBody body, Tags tags, Instant now) {
-        // 新建聚合，id=null；计数器初始全部为0；acceptedAnswerId=null，deletedAt=null
         return new Question(
                 null,
                 authorId,
@@ -83,10 +82,9 @@ public class Question {
     public void edit(Actor actor, boolean actorManagesCourse, Title newTitle, MarkdownBody newBody, Tags newTags,
                      Instant now) {
         ensureNotDeleted();
-        // 权限：作者本人 或者课程管理者 允许编辑
         boolean isAuthor = actor.userId() == this.authorId;
         if(!isAuthor && !actorManagesCourse){
-            throw new ForbiddenException("QA‑3002","无权编辑该问题");
+            throw new ForbiddenException("QA‑3002","");
         }
         this.title = newTitle;
         this.body = newBody;
@@ -97,22 +95,18 @@ public class Question {
     /** 采纳最佳答案。 */
     public void accept(Answer answer, Actor actor, boolean actorManagesCourse) {
         ensureNotDeleted();
-        // 权限校验：提问作者 or 课程管理者
         boolean isAuthor = actor.userId() == this.authorId;
         if(!isAuthor && !actorManagesCourse){
-            throw new ForbiddenException("QA‑3001","只有提问者或课程教师/助教可以采纳");
+            throw new ForbiddenException("QA‑3001","");
         }
-        // 不允许重复采纳
         if(this.acceptedAnswerId != null){
-            throw new ConflictException("QA‑2002","该问题已经存在被采纳的答案，不能重复采纳");
+            throw new ConflictException("QA‑2002","");
         }
-        // 答案必须归属当前问题
         if(!Objects.equals(answer.questionId(), this.id)){
-            throw new BusinessRuleException("QA‑1010","该答案不属于此问题");
+            throw new BusinessRuleException("QA‑1010","");
         }
-        // 答案自身不能已经被删除
         if(answer.isDeleted()){
-            throw new BusinessRuleException("QA‑1011","已删除的回答不能被采纳");
+            throw new BusinessRuleException("QA‑1011","");
         }
         this.acceptedAnswerId = answer.id();
     }
@@ -121,28 +115,24 @@ public class Question {
         ensureNotDeleted();
         boolean isAuthor = actor.userId() == this.authorId;
         if(actorManagesCourse){
-            // 课程管理者：无条件可以删
             this.deletedAt = now;
         }else if(isAuthor){
-            // 提问作者：只能在没有回答的时候删除
             if(this.answerCount > 0){
-                throw new BusinessRuleException("QA‑1013","提问者不能删除已有回答的问题");
+                throw new BusinessRuleException("QA‑1013","");
             }
             this.deletedAt = now;
         }else{
-            // 既不是作者，也不是管理者，禁止删除
-            throw new ForbiddenException("QA‑3003","无权删除该问题");
+            throw new ForbiddenException("QA‑3003","");
         }
     }
 
     public void ensureOpenForAnswers() {
-        // 已删除问题禁止回答
         ensureNotDeleted();
     }
 
     private void ensureNotDeleted() {
         if(isDeleted()){
-            throw new BusinessRuleException("QA‑1020","内容已删除，不能执行该操作");
+            throw new BusinessRuleException("QA‑1020","");
         }
     }
 

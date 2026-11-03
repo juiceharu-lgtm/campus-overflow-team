@@ -5,6 +5,7 @@ import com.campusoverflow.qa.domain.Question;
 import com.campusoverflow.qa.domain.QuestionRepository;
 import com.campusoverflow.qa.domain.Tags;
 import com.campusoverflow.qa.domain.Title;
+import com.campusoverflow.shared.domain.NotFoundException;
 import com.campusoverflow.shared.security.Actor;
 import org.springframework.stereotype.Service;
 import java.time.Instant;
@@ -29,7 +30,7 @@ public class EditQuestionUseCase {
     public void execute(Actor actor, long questionId, boolean actorManagesCourse,
                        Title newTitle, MarkdownBody newBody, Tags newTags) {
         Question question = questionRepository.findById(questionId)
-                .orElseThrow(() -> new com.campusoverflow.shared.domain.BusinessRuleException("QA-1020", "问题不存在"));
+                .orElseThrow(() -> new NotFoundException("QA‑4001", "问题不存在"));
 
         Instant now = Instant.now();
         question.edit(actor, actorManagesCourse, newTitle, newBody, newTags, now);

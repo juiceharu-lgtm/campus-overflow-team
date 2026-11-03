@@ -20,6 +20,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -44,7 +45,8 @@ class EditAnswerUseCaseTest {
         when(answerRepository.findById(10L)).thenReturn(Optional.of(answer));
         when(answer.questionId()).thenReturn(20L);
         when(questionRepository.findById(20L)).thenReturn(Optional.of(question));
-        when(identityApi.canManageCourse(1L, any())).thenReturn(false);
+        //  修复：全部参数都使用匹配器 eq()，不再字面量+any混用
+        when(identityApi.canManageCourse(eq(1L), any())).thenReturn(false);
 
         useCase.execute(actor, 10L, newBody);
 

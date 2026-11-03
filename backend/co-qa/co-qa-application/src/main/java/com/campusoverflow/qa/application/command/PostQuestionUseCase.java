@@ -6,8 +6,12 @@ import com.campusoverflow.qa.domain.MarkdownBody;
 import com.campusoverflow.qa.domain.Tags;
 import com.campusoverflow.qa.domain.Title;
 import com.campusoverflow.shared.security.Actor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.time.Instant;
 
+@Service
 public class PostQuestionUseCase {
 
     private final QuestionRepository questionRepository;
@@ -16,6 +20,7 @@ public class PostQuestionUseCase {
         this.questionRepository = questionRepository;
     }
 
+    @Transactional
     public Long execute(Actor actor, Long courseId, Title title, MarkdownBody body, Tags tags) {
         Instant now = Instant.now();
         // 调用聚合工厂方法新建问题

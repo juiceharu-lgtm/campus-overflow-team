@@ -10,10 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * 回答聚合根。独立于 Question 聚合以降低并发冲突，通过 questionId 引用问题。
- * 是否被采纳由 Question.acceptedAnswerId 决定（单一事实来源），这里不重复存储。
- */
 public class Answer {
 
     private Long id;
@@ -73,16 +69,12 @@ public class Answer {
                 answer.authorId(),
                 now
         ));
-
         return answer;
     }
 
-    /**
-     * 仓储保存后回填聚合 ID。测试和适配器都会调用。
-     */
     public void assignId(long id) {
         if (this.id != null) {
-            throw new ConflictException("QA-2004", "Answer ID 已经赋值，不能重复 assignId");
+            throw new ConflictException("Answer ID 已经赋值，不能重复 assignId", "QA-2004");
         }
         this.id = id;
     }
@@ -93,14 +85,12 @@ public class Answer {
 
     public void edit(Actor actor, boolean actorManagesCourse, MarkdownBody newBody, Instant now) {
         ensureNotDeleted();
-
+        // 不变式：仅作者本人 / 课程管理者有权编辑
         if (!(this.authorId == actor.userId() || actorManagesCourse)) {
-            throw new ForbiddenException("QA-3004", "无权编辑该回答");
+            throw new ForbiddenException("无权编辑", "QA-3004");
         }
-
         this.body = newBody;
         this.updatedAt = now;
-
         addEvent(new AnswerEditedDomainEvent(
                 this.id,
                 this.questionId,
@@ -115,18 +105,16 @@ public class Answer {
 
     public void endorse(Actor actor, boolean actorManagesCourse, Instant now) {
         ensureNotDeleted();
-
+        // 不变式：只有课程管理者（教师）可以执行 endorse
         if (!actorManagesCourse) {
-            throw new ForbiddenException("QA-3004", "只有课程管理者可以认证回答");
+            throw new ForbiddenException("无权执行教师认证", "QA-3005");
         }
-
+        // 不变式：不能重复认证
         if (this.endorsedBy != null) {
-            throw new ConflictException("QA-2003", "该回答已经被教师认证");
+            throw new ConflictException("该回答已经被教师认证过，不可重复认证", "QA-2003");
         }
-
         this.endorsedBy = actor.userId();
         this.updatedAt = now;
-
         addEvent(new AnswerEndorsedDomainEvent(
                 this.id,
                 this.questionId,
@@ -143,16 +131,17 @@ public class Answer {
         ensureNotDeleted();
 
         if (this.authorId == actor.userId()) {
+            // 作者自己删：如果回答已经被采纳，禁止删除 QA-1015
             if (answerIsAccepted) {
-                throw new BusinessRuleException("QA-1012", "被采纳的回答，作者不能删除");
+                throw new BusinessRuleException("被采纳的回答，作者不能删除", "QA-1015");
             }
         } else if (!actorManagesCourse) {
-            throw new ForbiddenException("QA-3003", "无权删除该回答");
+            // 既不是作者，也不是课程管理员：无权删除 QA-3006
+            throw new ForbiddenException("无权删除", "QA-3006");
         }
 
         this.deletedAt = now;
         this.updatedAt = now;
-
         addEvent(new AnswerDeletedDomainEvent(
                 this.id,
                 this.questionId,
@@ -163,7 +152,7 @@ public class Answer {
 
     public void ensureNotDeleted() {
         if (isDeleted()) {
-            throw new BusinessRuleException("QA-1020", "内容已删除，不能执行该操作");
+            throw new BusinessRuleException("资源已删除，禁止操作", "QA-1021");
         }
     }
 
@@ -172,15 +161,15 @@ public class Answer {
     }
 
     public static Answer reconstitute(Long id,
-                                       long questionId,
-                                       long authorId,
-                                       MarkdownBody body,
-                                       int score,
-                                       Long endorsedBy,
-                                       Instant createdAt,
-                                       Instant updatedAt,
-                                       Instant deletedAt,
-                                       long version) {
+                                      long questionId,
+                                      long authorId,
+                                      MarkdownBody body,
+                                      int score,
+                                      Long endorsedBy,
+                                      Instant createdAt,
+                                      Instant updatedAt,
+                                      Instant deletedAt,
+                                      long version) {
         return new Answer(id, questionId, authorId, body, score, endorsedBy,
                 createdAt, updatedAt, deletedAt, version);
     }
